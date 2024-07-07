@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <!-- adding new product -->
+    <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md mb-8 m-10 text-center">
+        <h2 class="text-2xl font-bold mb-4">Add Your Product</h2>
+        <form id="addProductForm" class="space-y-4">
+            <input type="text" id="sellerName" placeholder="Seller's Name"
+                class="w-full p-2 border border-gray-300 rounded" required>
+            <input type="text" id="productName" placeholder="Product Name"
+                class="w-full p-2 border border-gray-300 rounded" required>
+            <textarea id="productDescription" placeholder="Product Description"
+                class="w-full p-2 border border-gray-300 rounded" required></textarea>
+            <input type="number" id="price" placeholder="Price" class="w-full p-2 border border-gray-300 rounded"
+                required>
+            <input type="number" id="quantity" placeholder="Quantity Available"
+                class="w-full p-2 border border-gray-300 rounded" required>
+            <label for="productImage" class="m-2">Upload Image of Product</label>
+            <input type="file" id="productImage" class="w-full p-2 border border-gray-300 rounded" required>
+            <button type="submit" class="w-full bg-yellow-500 text-white p-2 rounded">Add Product</button>
+        </form>
+        <div id="uploadProgress" class="mt-4 hidden">
+            <p class="text-gray-700">Uploading...</p>
+            <div class="w-full bg-gray-200 rounded-full">
+                <div id="progressBar"
+                    class="bg-green-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
+                    style="width: 0%">0%</div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+            authDomain: "ecom-23375.firebaseapp.com",
+            databaseURL: "https://ecom-23375-default-rtdb.firebaseio.com",
+            projectId: "ecom-23375",
+            storageBucket: "ecom-23375.appspot.com",
+            messagingSenderId: "79470020815",
+            appId: "1:79470020815:web:39272f3397b04e54260fba",
+            measurementId: "G-5GK70Z3NZL"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Authentication
+
+
+        // Add Product
+        document.getElementById('addProductForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            var productName = document.getElementById('productName').value;
+            var productDescription = document.getElementById('productDescription').value;
+            var productImage = document.getElementById('productImage').files[0];
+            var sellerName = document.getElementById('sellerName').value;
+            var Price = document.getElementById('price').value;
+            var Quantity = document.getElementById('quantity').value;
+
+            var storageRef = firebase.storage().ref('products/' + productImage.name);
+            var uploadTask = storageRef.put(productImage);
+
+            document.getElementById('uploadProgress').classList.remove('hidden');
+
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    // Upload progress
+                    var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressBar').textContent = Math.round(progress) + '%';
+                },
+                (error) => {
+                    console.error('Upload failed:', error);
+                },
+                () => {
+                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                        firebase.firestore().collection('products').add({
+                            seller: sellerName,
+                            name: productName,
+                            price: Price,
+                            quantity: Quantity,
+                            description: productDescription,
+                            imageUrl: downloadURL,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+
+                        }).then(() => {
+                            console.log('Product added successfully');
+                            document.getElementById('uploadProgress').classList.add('hidden');
+                            window.location.href="displayAllProducts.html";
+                        }).catch((error) => {
+                            console.error('Error adding product:', error);
+                        });
+                    });
+                }
+            );
+        });
+    </script>
+</body>
+
+</html>

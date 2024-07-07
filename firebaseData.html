@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+
+      <form id="dataForm">
+        <input type="text" id="name" placeholder="Name" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <button type="submit">Submit</button>
+      </form>
+      
+
+     
+      
+      <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, set, push, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+          authDomain: "ecom-23375.firebaseapp.com",
+          databaseURL: "https://ecom-23375-default-rtdb.firebaseio.com",
+          projectId: "ecom-23375",
+          storageBucket: "ecom-23375.appspot.com",
+          messagingSenderId: "79470020815",
+          appId: "1:79470020815:web:39272f3397b04e54260fba",
+          measurementId: "G-5GK70Z3NZL"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        document.getElementById('dataForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+          
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+          
+            storeDataWithSerialNumber(name,email);
+            
+          });
+          const storeDataWithSerialNumber = async (name, email) => {
+            try {
+              // Get the current count
+              const countRef = ref(database, 'count');
+              const countSnap = await get(countRef);
+              let count = 1;
+          
+              if (countSnap.exists()) {
+                count = countSnap.val().value + 1;
+              }
+          
+              // Set data with the incremented count as the key
+              await set(ref(database, `users/${count}`), {
+                name: name,
+                email: email
+              });
+          
+              // Update the count
+              await set(countRef, { value: count });
+          
+              alert('Data submitted successfully!');
+              document.getElementById('dataForm').reset();
+            } catch (error) {
+              console.error('Error submitting data:', error);
+            }
+          };
+          
+      </script>
+
+</body>
+</html>
