@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,9 +13,9 @@
             background-color: #f6c700;
             color: #1a202c;
         }
-        
     </style>
 </head>
+
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
     <nav class="theme-yellow shadow-md">
@@ -30,12 +31,15 @@
                     <a href="#" class="hover:text-gray-800">About</a>
                 </div>
                 <div class="hidden md:flex">
-                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800"><button class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
+                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800"><button
+                            class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
                 </div>
                 <div class="md:hidden">
                     <button id="menu-button" class="focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
                 </div>
@@ -57,19 +61,21 @@
         });
     </script>
     <div class="container mx-auto p-3 ">
-        
+
 
         <!-- Product List -->
         <h2 class="text-5xl font-bold text-center text-gray-800 m-10">Products</h2>
-        <div id="productList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
+        <div id="productList"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
 
         <div class="text-center">
-            <a href="addNewProduct.html"><button class="p-8 m-5  rounded-xl text-white font-mono font-bold text-2xl bg-yellow-500 shadow-xl shadow-green-500">Add Your Own Product</button></a>
+            <a href="addNewProduct.html"><button
+                    class="p-8 m-5  rounded-xl text-white font-mono font-bold text-2xl bg-yellow-500 shadow-xl shadow-green-500">Add
+                    Your Own Product</button></a>
         </div>
 
         <!-- Add Product Form -->
-        
-
+    </div>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
@@ -87,15 +93,15 @@
             messagingSenderId: "79470020815",
             appId: "1:79470020815:web:39272f3397b04e54260fba",
             measurementId: "G-5GK70Z3NZL"
-          };
+        };
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
         // Authentication
-        
+
 
         // Add Product
-        
+
 
         // Display Products
         function displayProducts() {
@@ -103,10 +109,10 @@
             firebase.firestore().collection('products').orderBy('timestamp', 'desc').get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     var product = doc.data();
-                    var productId = doc.id; 
+                    var productId = doc.id;
                     var productElement = document.createElement('div');
                     productElement.className = 'product bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out m-2 overflow-hidden flex flex-col';
-            productElement.innerHTML = `
+                    productElement.innerHTML = `
                 <div class="mb-4">
                     <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
                 </div>
@@ -118,7 +124,7 @@
                 </div>
                 <button class="mt-4 bg-yellow-500 text-white p-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 ease-in-out" onclick="viewProduct('${productId}')">Buy Now</button>
             `;
-            productList.appendChild(productElement);
+                    productList.appendChild(productElement);
                 });
             });
         }
@@ -130,4 +136,5 @@
         displayProducts();
     </script>
 </body>
+
 </html>

@@ -28,16 +28,15 @@
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="text-xl font-bold">
-                    E-commerce
+                    Buy And Sell
                 </div>
                 <div class="hidden md:flex space-x-4">
-                    <a href="#" class="hover:text-gray-800">Home</a>
-                    <a href="#" class="hover:text-gray-800">Shop</a>
-                    <a href="#" class="hover:text-gray-800">Contact</a>
-                    <a href="#" class="hover:text-gray-800">About</a>
+                    <a href="index.html" class="hover:text-gray-800 font-semibold">Home</a>
+                    <a href="#" class="hover:text-gray-800 font-semibold">Contact</a>
+                    <a href="#" class="hover:text-gray-800 font-semibold">About</a>
                 </div>
                 <div class="hidden md:flex">
-                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800"><button class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
+                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800 font-semibold"><button class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
                 </div>
                 <div class="md:hidden">
                     <button id="menu-button" class="focus:outline-none">
@@ -49,12 +48,10 @@
             </div>
         </div>
         <div id="menu" class="md:hidden hidden">
-            <a href="#" class="block px-4 py-2">Home</a>
-            <a href="#" class="block px-4 py-2">Shop</a>
-            <a href="#" class="block px-4 py-2">Contact</a>
-            <a href="#" class="block px-4 py-2">About</a>
-            <a href="#login" class="block px-4 py-2">Login</a>
-            <a href="#signup" class="block px-4 py-2">Sign Up</a>
+            <a href="index.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Home</a>
+            <a href="#" class="block px-4 py-2 hover:bg-green-400 font-semibold">Contact</a>
+            <a href="#" class="block px-4 py-2 hover:bg-green-400 font-semibold">About</a>
+            <a href="loginSignUp.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Login/Sign Up</a>
         </div>
     </nav>
 
@@ -67,20 +64,84 @@
 
     
 
-    <h1 class="text-center text-red-400 text-5xl font-mono mt-10">Ecommerce website</h1>
+    <h1 class="text-center text-red-400 text-5xl font-mono mt-10">Welcome To Buy And Sell</h1>
     <!-- <a href="source/products.html">See all the Products</a><br>
     <a href="firebaseData.html">Firebase</a><br>
     <a href="firestore.html">Firestore</a><br>
 
     <a href="ImageUpload.html">Go to Images</a><br> -->
 
-    <h1 class="text-center text-2xl m-10 ">Made By Nikhil and Gaurav</h1>
-
-    <div class="flex justify-center p-10">
+    <div class="container mx-auto p-3 ">
 
 
-        <a href="displayAllProducts.html"><button class="border p-8 bg-yellow-300 rounded-xl text-xl font-bold font-mono">See All Our Products</button></a>
+        <!-- Product List -->
+        <h2 class="text-5xl font-bold text-center text-gray-800 m-10">All Products</h2>
+        <div id="productList"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
+
+        <!-- Add Product Form -->
     </div>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+            authDomain: "ecom-23375.firebaseapp.com",
+            databaseURL: "https://ecom-23375-default-rtdb.firebaseio.com",
+            projectId: "ecom-23375",
+            storageBucket: "ecom-23375.appspot.com",
+            messagingSenderId: "79470020815",
+            appId: "1:79470020815:web:39272f3397b04e54260fba",
+            measurementId: "G-5GK70Z3NZL"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Authentication
+
+
+        // Add Product
+
+
+        // Display Products
+        function displayProducts() {
+            var productList = document.getElementById('productList');
+            firebase.firestore().collection('products').orderBy('timestamp', 'desc').get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    var product = doc.data();
+                    var productId = doc.id;
+                    var productElement = document.createElement('div');
+                    productElement.className = 'product bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out m-2 overflow-hidden flex flex-col';
+                    productElement.innerHTML = `
+                <div class="mb-4">
+                    <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
+                </div>
+                <div class="flex-grow overflow-auto">
+                    <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
+                    <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
+                    <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                    <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
+                </div>
+                <button class="mt-4 bg-yellow-500 text-white p-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 ease-in-out" onclick="viewProduct('${productId}')">Buy Now</button>
+            `;
+                    productList.appendChild(productElement);
+                });
+            });
+        }
+
+        function viewProduct(productId) {
+            window.location.href = `productPage.html?id=${productId}`;
+        }
+
+        displayProducts();
+    </script>
+
+
 
 
 </body>
