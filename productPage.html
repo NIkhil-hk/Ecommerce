@@ -22,9 +22,55 @@
             z-index: 50;
         }
     </style>
+    <style>
+        .theme-yellow {
+            background-color: #f6c700;
+            color: #1a202c;
+        }
+       
+    </style>
 </head>
 
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <nav class="theme-yellow shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold">
+                    E-commerce
+                </div>
+                <div class="hidden md:flex space-x-4">
+                    <a href="#" class="hover:text-gray-800">Home</a>
+                    <a href="#" class="hover:text-gray-800">Shop</a>
+                    <a href="#" class="hover:text-gray-800">Contact</a>
+                    <a href="#" class="hover:text-gray-800">About</a>
+                </div>
+                <div class="hidden md:flex">
+                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800"><button class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-button" class="focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="menu" class="md:hidden hidden">
+            <a href="#" class="block px-4 py-2">Home</a>
+            <a href="#" class="block px-4 py-2">Shop</a>
+            <a href="#" class="block px-4 py-2">Contact</a>
+            <a href="#" class="block px-4 py-2">About</a>
+            <a href="#login" class="block px-4 py-2">Login</a>
+            <a href="#signup" class="block px-4 py-2">Sign Up</a>
+        </div>
+    </nav>
+
+    <script>
+        document.getElementById('menu-button').addEventListener('click', function () {
+            document.getElementById('menu').classList.toggle('hidden');
+        });
+    </script>
     <div class="container mx-auto p-3">
         <!-- Product Details -->
         <div id="productDetails" class="max-w-4xl mx-auto bg-white p-8 rounded shadow-md mb-8"></div>
