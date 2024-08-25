@@ -7,16 +7,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+   
 
 
-    
     <style>
         .theme-yellow {
             background-color: #f6c700;
             color: #1a202c;
         }
-        
-        
+
+        .loading {
+            border: 10px solid #d2cece;
+            border-radius: 50%;
+            border-top: 10px solid yellow;
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .search-container {
+            position: relative;
+            width: 300px;
+            justify-content:center ;
+            left: 10vw;
+             /* Adjust width as needed */
+        }
+
+        /* Style the search input field */
+        .search-input {
+            width: 80vw;
+            padding: 15px 15px 15px 40px; /* Add padding-left to accommodate the icon */
+            border-radius: 20px; /* Round corners */
+            border: 1px solid #ddd; /* Border styling */
+            outline: none; /* Remove input outline */
+        }
+
+        /* Style the search icon */
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            font-size: 18px; /* Adjust icon size */
+            color: #aaa; /* Icon color */
+            cursor: pointer; /* Change cursor to pointer */
+        }
     </style>
 
 </head>
@@ -36,12 +84,15 @@
                     <a href="#" class="hover:text-gray-800 font-semibold">About</a>
                 </div>
                 <div class="hidden md:flex">
-                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800 font-semibold"><button class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
+                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800 font-semibold"><button
+                            class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
                 </div>
                 <div class="md:hidden">
                     <button id="menu-button" class="focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
                 </div>
@@ -62,22 +113,59 @@
     </script>
 
 
-    
 
-    <h1 class="text-center text-red-400 text-5xl font-mono mt-10">Welcome To Buy And Sell</h1>
+
+    <h1 class="text-center text-red-400 text-5xl font-mono mt-8 mb-5">Welcome To Buy And Sell</h1>
     <!-- <a href="source/products.html">See all the Products</a><br>
     <a href="firebaseData.html">Firebase</a><br>
     <a href="firestore.html">Firestore</a><br>
 
     <a href="ImageUpload.html">Go to Images</a><br> -->
 
+    <div class='text-center'>
+
+        
+        
+        
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" id="searchBar" oninput="filterAndDisplayProducts()" placeholder="Search For Product...">
+        </div>
+    </div>
+    
+    <div class="flex justify-center m-4">
+        <select
+            class="border-4 p-4 rounded-2xl"
+            id="sortDropdown"
+            onchange="handleSortChange(event)"
+        >
+            <option value="timestamp-desc">Newest First</option>
+            <option value="timestamp-asc">Oldest First</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A to Z</option>
+            <option value="name-desc">Name: Z to A</option>
+            <option value="views-desc">Most Popular</option>
+            <option value="views-asc">Least Popular</option>
+            <option value="quantitySold-desc">Best Seller</option>
+            <option value="quantitySold-asc">Least Sold</option>
+        </select>
+    </div>
+    
+    
+
     <div class="container mx-auto p-3 ">
 
 
         <!-- Product List -->
-        <h2 class="text-5xl font-bold text-center text-gray-800 m-10">All Products</h2>
-        <div id="productList"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
+        <h2 class="text-5xl font-bold text-center text-gray-800 mb-10">All Products</h2>
+        <div id="Products" style="display: none;">
+            <div id="productList"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
+        </div>
+        <div id="loading" class="loading" style="display: block;"></div>
+
+        
 
         <!-- Add Product Form -->
     </div>
@@ -100,24 +188,65 @@
             measurementId: "G-5GK70Z3NZL"
         };
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
 
         // Authentication
 
+        const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(app);
 
-        // Add Product
+    let products = [];
+    let sortBy = 'timestamp'; // Default sort field
+    let sortOrder = 'desc';   // Default sort order
+    let searchTerm = '';      // Default search term
 
+    // Fetch products from Firebase and include document ID
+    async function fetchProducts() {
+        try {
+            const querySnapshot = await db.collection('products').get();
+            products = querySnapshot.docs.map(doc => {
+                return { id: doc.id, ...doc.data() }; // Include document ID in the product data
+            });
+            filterAndDisplayProducts();
+        } catch (error) {
+            console.error("Error fetching products: ", error);
+        }
+    }
 
-        // Display Products
-        function displayProducts() {
-            var productList = document.getElementById('productList');
-            firebase.firestore().collection('products').orderBy('timestamp', 'desc').get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    var product = doc.data();
-                    var productId = doc.id;
-                    var productElement = document.createElement('div');
-                    productElement.className = 'product bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out m-2 overflow-hidden flex flex-col';
-                    productElement.innerHTML = `
+    function handleSortChange(event) {
+        const [criteria, order] = event.target.value.split('-');
+        sortBy = criteria;
+        sortOrder = order;
+        filterAndDisplayProducts();
+    }
+
+    function filterAndDisplayProducts() {
+        const searchTerm = document.getElementById('searchBar').value.toLowerCase();
+        const filteredProducts = products
+            .filter(product => product.name.toLowerCase().includes(searchTerm))
+            .sort((a, b) => {
+                if (sortBy === 'price' || sortBy === 'views' || sortBy === 'quantitySold') {
+                    return sortOrder === 'asc' ? a[sortBy] - b[sortBy] : b[sortBy] - a[sortBy];
+                } else if (sortBy === 'timestamp') {
+                    return sortOrder === 'asc' ? a.timestamp.seconds - b.timestamp.seconds : b.timestamp.seconds - a.timestamp.seconds;
+                } else if (sortBy === 'name') {
+                    return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+                }
+                return 0;
+            });
+        displayProducts(filteredProducts);
+    }
+
+    function displayProducts(productsToDisplay) {
+        const productList = document.getElementById('productList');
+        productList.innerHTML = ''; // Clear previous products
+
+        productsToDisplay.forEach(product => {
+            const productElement = document.createElement('div');
+            productElement.className = 'product bg-white rounded-lg shadow-lg hover:shadow-2xl hover:bg-gray-200 transition-colors duration-300 ease-in-out m-3 overflow-hidden flex flex-col transition-transform transform hover:scale-110';
+            productElement.innerHTML = `
+            ${product.quantity>0?`
+                
+            <button class='m-6' onclick="viewProduct('${product.id}')">
                 <div class="mb-4">
                     <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
                 </div>
@@ -127,18 +256,51 @@
                     <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
                     <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
                 </div>
-                <button class="mt-4 bg-yellow-500 text-white p-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 ease-in-out" onclick="viewProduct('${productId}')">Buy Now</button>
-            `;
-                    productList.appendChild(productElement);
-                });
-            });
-        }
+            </button>
+                `:`
+                
+            <button class='p-6 bg-red-100' onclick="viewProduct('${product.id}')">
+                
+                <p class="text-lg text-red-500"><span class="font-bold">Out Of Stock</span> <span class="font-normal"></span></p>
+                <div class="mb-4">
+                    <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
+                </div>
+                <div class="flex-grow overflow-auto">
+                    <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
+                    <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
+                    <p class="text-lg text-red-500"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                    <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
+                </div>
+            </button>
+                `}
+                
+                `;
+            productList.appendChild(productElement);
+        });
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('Products').style.display = 'block';
+    }
+
+        // Add Product
+
+
+        // Display Products
+        
+        
+           
+        // Call displayProducts when the page loads
+        
+
+        
 
         function viewProduct(productId) {
             window.location.href = `productPage.html?id=${productId}`;
         }
 
-        displayProducts();
+        fetchProducts();
+
+
     </script>
 
 

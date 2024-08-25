@@ -114,50 +114,94 @@
         // Add Product
         document.getElementById('addProductForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            var productName = document.getElementById('productName').value;
-            var productDescription = document.getElementById('productDescription').value;
-            var productImage = document.getElementById('productImage').files[0];
-            var sellerName = document.getElementById('sellerName').value;
-            var Price = document.getElementById('price').value;
-            var Quantity = document.getElementById('quantity').value;
+var productName = document.getElementById('productName').value;
+var productDescription = document.getElementById('productDescription').value;
+var productImage = document.getElementById('productImage').files[0];
+var sellerName = document.getElementById('sellerName').value;
+var Price = document.getElementById('price').value;
+var Quantity = document.getElementById('quantity').value;
 
-            var storageRef = firebase.storage().ref('products/' + productImage.name);
-            var uploadTask = storageRef.put(productImage);
+// Function to resize and compress the image to exactly 50KB
+function compressImageToExactSize(file, maxSizeKB, callback) {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
 
-            document.getElementById('uploadProgress').classList.remove('hidden');
+            const scaleFactor = Math.sqrt(maxSizeKB * 1024 / (img.width * img.height * 0.75));
+            canvas.width = img.width * scaleFactor;
+            canvas.height = img.height * scaleFactor;
 
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    // Upload progress
-                    var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    document.getElementById('progressBar').style.width = progress + '%';
-                    document.getElementById('progressBar').textContent = Math.round(progress) + '%';
-                },
-                (error) => {
-                    console.error('Upload failed:', error);
-                },
-                () => {
-                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                        firebase.firestore().collection('products').add({
-                            seller: sellerName,
-                            name: productName,
-                            price: Price,
-                            quantity: Quantity,
-                            description: productDescription,
-                            imageUrl: downloadURL,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            // Function to try different quality levels to achieve the target size
+            function adjustQuality(currentQuality, callback) {
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob.size / 1024 <= maxSizeKB) {
+                            callback(blob);
+                        } else {
+                            // Decrease quality if size is still larger than maxSizeKB
+                            adjustQuality(currentQuality - 0.05, callback);
+                        }
+                    },
+                    'image/jpeg',
+                    currentQuality
+                );
+            }
 
-                        }).then(() => {
-                            console.log('Product added successfully');
-                            document.getElementById('uploadProgress').classList.add('hidden');
-                            window.location.href="displayAllProducts.html";
-                        }).catch((error) => {
-                            console.error('Error adding product:', error);
-                        });
-                    });
-                }
-            );
+            // Start adjusting quality from 0.7
+            adjustQuality(0.7, callback);
+        };
+    };
+}
+
+// Use the compressImageToExactSize function to compress the image
+compressImageToExactSize(productImage, 50, (compressedImageBlob) => {
+    var storageRef = firebase.storage().ref('products/' + productImage.name);
+    var uploadTask = storageRef.put(compressedImageBlob);
+
+    document.getElementById('uploadProgress').classList.remove('hidden');
+
+    uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+            // Upload progress
+            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').textContent = Math.round(progress) + '%';
+        },
+        (error) => {
+            console.error('Upload failed:', error);
+        },
+        () => {
+            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                firebase.firestore().collection('products').add({
+                    seller: sellerName,
+                    name: productName,
+                    price: Price,
+                    quantity: Quantity,
+                    description: productDescription,
+                    imageUrl: downloadURL,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                })
+                .then(() => {
+                    console.log('Product added successfully');
+                    document.getElementById('uploadProgress').classList.add('hidden');
+                    window.location.href = 'loggedIn.html';
+                })
+                .catch((error) => {
+                    console.error('Error adding product:', error);
+                });
+            });
+        }
+    );
+});
+
         });
     </script>
 </body>

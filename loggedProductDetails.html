@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <style>
+        .loading {
+            border: 10px solid #d2cece;
+            border-radius: 50%;
+            border-top: 10px solid yellow;
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading1 {
+            border: 6px solid #d2cece;
+            border-radius: 50%;
+            border-top: 8px solid rgb(52, 227, 84);
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <style>
+        .theme-yellow {
+            background-color: #f6c700;
+            color: #1a202c;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <nav class="theme-yellow shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold">
+                    Buy And Sell
+                </div>
+
+                <div class="hidden md:flex space-x-4">
+                    <a href="loggedIn.html" class="hover:text-gray-800 font-semibold">Home</a>
+                    <a href="#" class="hover:text-gray-800 font-semibold">Contact</a>
+                    <a href="index.html" class="hover:text-gray-800 font-semibold">Logout</a>
+                </div>
+                <div class="text-xl font-bold" id="pageUser">
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-button" class="focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="menu" class="md:hidden hidden">
+            <a href="loggedIn.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Home</a>
+            <a href="#" class="block px-4 py-2 hover:bg-green-400 font-semibold">Contact</a>
+            <a href="index.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Logout</a>
+            <a href="" class="block px-4 py-2 hover:bg-green-400 font-semibold">Welcome</a>
+        </div>
+    </nav>
+
+    <dialog id="quantityDialog" class="p-0 rounded-lg shadow-lg w-full max-w-md">
+        <div class="p-8 bg-white rounded-lg">
+            <div class="flex justify-between">
+                <h2 class="text-2xl font-bold mb-4 mr-10">Quantity : </h2>
+                <div class="flex items-center">
+                    <button type="button"
+                        class="px-4 py-2 bg-yellow-500 text-white font-bold rounded-l focus:outline-none"
+                        onclick="decreaseQuantity()">-</button>
+                    <input type="number" id="quantity" value="1"
+                        class="w-12 h-10 text-center border-t border-b border-yellow-500 focus:outline-none" readonly>
+                    <button type="button"
+                        class="px-4 py-2 bg-yellow-500 text-white font-bold rounded-r focus:outline-none"
+                        onclick="increaseQuantity()">+</button>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold mb-4" id="amount"></h2>
+            <h3 class="text-xl font-bold mb-4 mt-10">Confirm the Order</h3>
+            <input id="captcha" placeholder="Enter Code To Confirm Order"
+                class="w-full p-2 mb-5 border border-gray-300 rounded">
+            <p id="captcha-display" class="font-bold text-lg bg-yellow-100 text-yellow-600 p-2 mb-4 rounded"></p>
+            <button style="display: block;" id="subButton" class="w-full bg-green-500 text-white p-2 rounded"
+                onclick="verifyCap()">Submit</button>
+            <div id="loading1" class="loading1" style="display: none;"></div>
+
+            <button id="canButton" onclick="closeDialog()"
+                class="mt-4 w-full bg-red-500 text-white p-2 rounded">Cancel</button>
+        </div>
+    </dialog>
+
+    <script>
+        document.getElementById('menu-button').addEventListener('click', function () {
+            document.getElementById('menu').classList.toggle('hidden');
+        });
+        document.getElementById('pageUser').innerHTML = "Welcome " + localStorage.getItem('userName')
+
+        var captchaCode;
+        function openDialog() {
+            captchaCode = generateCaptcha();
+            document.getElementById('quantity').value = 1;
+            document.getElementById('amount').innerHTML = "Amount : ₹ " + product.price;
+            document.getElementById('quantityDialog').showModal();
+            document.getElementById('captcha-display').innerHTML = captchaCode;
+        }
+
+        function closeDialog() {
+            document.getElementById('quantityDialog').close();
+        }
+
+        function decreaseQuantity() {
+            let quantityInput = document.getElementById('quantity');
+            let currentValue = parseInt(quantityInput.value);
+
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+
+            q = parseInt(document.getElementById('quantity').value);
+
+            if (q != NaN && q > 0) {
+                // Multiply the input value and update the result display
+                const a = q * product.price;
+                document.getElementById('amount').innerHTML = 'Amount : ₹ ' + a;
+            } else {
+                // Clear the result if the input is not a number
+                document.getElementById('amount').innerHTML = 'Amount : ₹ 0';
+            }
+        }
+
+        function increaseQuantity() {
+            let quantityInput = document.getElementById('quantity');
+            let currentValue = parseInt(quantityInput.value);
+
+            quantityInput.value = currentValue + 1;
+
+            q = parseInt(document.getElementById('quantity').value);
+
+            if (q != NaN && q > 0) {
+                // Multiply the input value and update the result display
+                const a = q * product.price;
+                document.getElementById('amount').innerHTML = 'Amount : ₹ ' + a;
+            } else {
+                // Clear the result if the input is not a number
+                document.getElementById('amount').innerHTML = 'Amount : ₹ 0';
+            }
+        }
+
+        function generateCaptcha() {
+            const charsArray = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let captcha = '';
+            for (let i = 0; i < 4; i++) {
+                const randomIndex = Math.floor(Math.random() * charsArray.length);
+                captcha += charsArray[randomIndex];
+            }
+            return captcha;
+        }
+
+        function verifyCap() {
+            if (document.getElementById('captcha').value == captchaCode) {
+                buy();
+            }
+            else {
+                alert("Wrong Captcha Code")
+            }
+        }
+
+
+
+
+    </script>
+    <div class="container mx-auto p-3">
+        <!-- Product Details -->
+        <div id="productDetails" style="display: none;" class="max-w-4xl mx-auto bg-white p-8 rounded shadow-md mb-8">
+        </div>
+
+        <div id="loading" class="loading" style="display: block;"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+
+
+
+
+
+
+
+    <script>
+
+
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+            authDomain: "ecom-23375.firebaseapp.com",
+            databaseURL: "https://ecom-23375-default-rtdb.firebaseio.com",
+            projectId: "ecom-23375",
+            storageBucket: "ecom-23375.appspot.com",
+            messagingSenderId: "79470020815",
+            appId: "1:79470020815:web:39272f3397b04e54260fba",
+            measurementId: "G-5GK70Z3NZL"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+
+
+
+        // Get Product ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        var product;
+        var success = 0;
+        var user;
+        var balance;
+
+
+
+        // Fetch and Display Product Details
+        function displayProductDetails(productId) {
+            var productDetails = document.getElementById('productDetails');
+            productDetails.innerHTML = '';
+
+            firebase.firestore().collection('products').doc(productId).get().then((doc) => {
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('productDetails').style.display = 'block';
+                if (doc.exists) {
+                    product = doc.data();
+                    productDetails.innerHTML = `
+                        <h2 class="text-3xl font-bold mb-4">${product.name}</h2>
+                        <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-96 object-contain mb-4">
+                        <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
+                        <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                        <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
+                        <p class="text-gray-700 mb-4"><span class="font-bold">Description :</span> <span class="font-normal">${product.description}</span></p>
+                        <div class='flex justify-between'>
+                            ${product.quantity > 0 ? `
+                                <button class="mt-4 bg-yellow-500 text-white p-4 px-10 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 ease-in-out" type="button" id="buyButton" onclick="openDialog()">Buy Now</button>
+                            ` : `
+                                <button class="mt-4 border border-blue-500 text-red-600 p-4 rounded-lg font-semibold text-center">Out of Stock</button>
+                            `}
+                            ${product.quantity > 0 ?`
+                                
+                            <button class="mt-4 bg-blue-500 text-white p-4 px-10 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-300 ease-in-out" onclick="'">Add to Cart</button>
+                                `:`
+                                
+                            <button class="mt-4 text-red-500 border border-red-300 p-4 px-10 rounded-lg font-semibold transition-colors duration-300 ease-in-out" onclick="'">Add to Cart</button>
+                                `}
+                        </div>
+
+                    `;
+                } else {
+                    console.error('No such product!');
+                }
+            }).catch((error) => {
+                console.error('Error getting product:', error);
+            });
+        }
+
+
+        async function buy() {
+            var quantity = parseInt(document.getElementById('quantity').value);
+
+            if (quantity != '' && quantity != NaN && quantity > 0) {
+
+                if (quantity <= product.quantity) {
+
+                    if (localStorage.getItem('userBalance') >= (product.price * quantity)) {
+
+                        document.getElementById('loading1').style.display = 'block';
+                        document.getElementById('subButton').style.display = 'none';
+                        document.getElementById('canButton').style.display = 'none';
+
+                        newQuantity = product.quantity - quantity;
+
+                        const productRef = firebase.firestore().collection('products').doc(productId);
+
+                        // Update the 'quantity' field with the new value
+
+                        try {
+                            await productRef.update({
+                                quantity: newQuantity
+                            });
+                        }
+                        catch (error) {
+                            alert('Error updating product quantity: ', error);
+                        }
+
+                        const pid = Math.floor(100000 + Math.random() * 900000);
+
+                        buyNow(pid, quantity);
+                        ChangeBal(localStorage.getItem('userBalance') - (product.price * quantity))
+                        SubmitHistory(quantity);
+
+                    }
+                    else {
+                        alert('Not enough Balance Add Money to Wallet');
+                    }
+
+                }
+                else {
+                    alert("Quantity not available. Enter a lesser Quantity.")
+                }
+            }
+            else {
+                alert("Enter a valid number.")
+            }
+        }
+
+
+
+        async function buyNow(pid, quantity) {
+
+
+            const buyerName = localStorage.getItem('userName');
+            const buyerEmail = localStorage.getItem('userEmail')
+
+            const subject = "Thanks for your Purchase " + buyerName + ". Your Purchase Id is : " + pid;
+
+            const body = `
+                  <h2>Hello ${buyerName} . Your Purchase of ${product.name} was Successful.</h2>
+                  <p>Here are the details of your purchase:</p>
+                  <ul>
+                    <li><strong>Product Name : </strong> ${product.name}</li>
+                    <li><strong>Price : </strong> ₹${product.price}</li>
+                    <li><strong>Amount paid : </strong> ₹${product.price * quantity}</li>
+                    <li><strong>Quantity Purchased : </strong> ${quantity}</li>
+                    <li><strong>Seller : </strong> ${product.seller}</li>
+                    <li><strong>Purchase ID : </strong> ${pid}</li>
+                    <li>Description : ${product.description}</p>
+                  </ul>
+                  <p>Thank you once again for the purchase 😊!</p>
+               
+                `;
+
+            const response = await fetch('https://otp-server-indol.vercel.app/api/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: buyerEmail, subject: subject, body: body })
+            });
+
+            if (response.ok) {
+                alert("Order Placed Successfully");
+                document.getElementById('loading1').style.display = 'none';
+                document.getElementById('subButton').style.display = 'block';
+                document.getElementById('canButton').style.display = 'none';
+
+
+                closeDialog();
+                window.location.href = 'loggedIn.html';
+
+            } else {
+                alert('Failed to place order. Please try again.');
+            }
+        }
+
+
+
+
+
+        displayProductDetails(productId);
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js";
+        import { getDatabase, ref, set, child, get, push } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-database.js";
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const emailNode = localStorage.getItem('userEmail').replace(/\./g, ',');
+
+
+        const dbRef = ref(database, 'users/' + emailNode + '/purchaseHistory');
+
+        
+
+        function SubmitHistory(quan) {
+
+            const newItemRef = push(dbRef);
+
+            // Set the new item data
+            set(newItemRef, {
+                name: product.name,
+                productId: productId,
+                price: product.price,
+                quantity: quan,
+                amount: product.price * quan
+
+            })
+                .then(() => {
+                    alert('Item added successfully!');
+                })
+                .catch((error) => {
+                    console.error('Error adding item: ', error);
+                });
+        }
+
+        function ChangeBal(balance) {
+            const dbref = ref(database, 'users/'+emailNode+'/balance')
+            set(dbref,balance);
+        }
+
+
+
+        window.SubmitHistory = SubmitHistory;
+        window.ChangeBal = ChangeBal
+
+
+
+
+
+    </script>
+
+
+
+</body>
+
+</html>

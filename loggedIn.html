@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+   
+
+
+    <style>
+        .theme-yellow {
+            background-color: #f6c700;
+            color: #1a202c;
+        }
+
+        .loading {
+            border: 10px solid #d2cece;
+            border-radius: 50%;
+            border-top: 10px solid yellow;
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dialog {
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 85vw;
+            max-height: 85vh;
+            overflow: scroll;
+        }
+
+        .dialog button {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+
+        .confirm {
+            background-color: #f0c14b;
+            border: 1px solid #a88734;
+        }
+
+        .cancel {
+            background-color: #ef5656;
+            color: aliceblue;
+            font-weight: bold;
+        }
+
+        .search-container {
+            position: relative;
+            width: 300px;
+            justify-content:center ;
+            left: 10vw;
+             /* Adjust width as needed */
+        }
+
+        /* Style the search input field */
+        .search-input {
+            width: 80vw;
+            padding: 15px 15px 15px 40px; /* Add padding-left to accommodate the icon */
+            border-radius: 20px; /* Round corners */
+            border: 1px solid #ddd; /* Border styling */
+            outline: none; /* Remove input outline */
+        }
+
+        /* Style the search icon */
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            font-size: 18px; /* Adjust icon size */
+            color: #aaa; /* Icon color */
+            cursor: pointer; /* Change cursor to pointer */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <nav class="theme-yellow shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold">
+                    Buy And Sell
+                </div>
+
+                <div class="hidden md:flex space-x-4">
+                    <a href="loggedIn.html" class="hover:text-gray-800 font-semibold">Home</a>
+                    <a href="contactUs.html" class="hover:text-gray-800 font-semibold">Contact</a>
+                    <a href="#" class="hover:text-gray-800 font-semibold">About</a>
+                    <button onclick="openDialog('logoutDialog')"
+                        class="hover:text-gray-800 font-semibold">Logout</button>
+                </div>
+                <div class="flex">
+                    <button onclick="openDialog('userDialog')">
+                        <div class="flex">
+
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="30px"
+                                height="30px">
+                                <path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 2 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                            </svg>
+
+
+
+                            <div class="text-xl font-bold" id="pageUser">
+                            </div>
+                        </div>
+                    </button>
+
+                    <button class="ml-10" onclick="openDialog('kartDialog')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="30px" height="30px"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M7 4h-2l-1 2H2v2h2l3.6 7.59-1.35 2.44c-.32.57-.25 1.27.16 1.75.41.48 1.03.76 1.67.76H19v-2H7.42c-.13 0-.25-.11-.25-.24l.03-.12L8.1 14h7.45c.74 0 1.39-.49 1.63-1.19l2.1-6.31c.09-.27.04-.56-.14-.78-.18-.22-.45-.34-.73-.34H7.21L6.27 4zm3.03 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm8 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-button" class="focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="menu" class="md:hidden hidden">
+            <a href="loggedIn.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Home</a>
+            <a href="#" class="block px-4 py-2 hover:bg-green-400 font-semibold">Contact</a>
+            <a href="#" class="block px-4 py-2 hover:bg-green-400 font-semibold">About</a>
+
+            <button onclick="openDialog('logoutDialog')"
+                class="hover:text-gray-800 font-bold w-full p-4 hover:bg-red-400">Logout</button>
+        </div>
+    </nav>
+
+    <script>
+        document.getElementById('menu-button').addEventListener('click', function () {
+            document.getElementById('menu').classList.toggle('hidden');
+        });
+        document.getElementById('pageUser').innerHTML = localStorage.getItem('userName')
+        function openDialog(dialogId) {
+            document.getElementById(dialogId).style.display = 'flex';
+        }
+
+        function closeDialog(dialogId) {
+            document.getElementById(dialogId).style.display = 'none';
+        }
+
+    </script>
+
+
+    <h1 id="greeting" class="text-center text-red-400 text-5xl font-mono mt-8 mb-5"></h1>
+
+    <div class='text-center'>
+        
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchBar" oninput="filterAndDisplayProducts()" placeholder="Search For Product...">
+            </div>
+    </div>
+
+    <div class="flex justify-center m-4">
+        <select class="border-4 p-4 rounded-2xl" id="sortDropdown" onchange="handleSortChange(event)">
+            <option value="timestamp-desc">Newest First</option>
+            <option value="timestamp-asc">Oldest First</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A to Z</option>
+            <option value="name-desc">Name: Z to A</option>
+            <option value="views-desc">Most Popular</option>
+            <option value="views-asc">Least Popular</option>
+            <option value="quantitySold-desc">Best Seller</option>
+            <option value="quantitySold-asc">Least Sold</option>
+        </select>
+    </div>
+
+
+    <div class="container mx-auto p-3 ">
+
+
+        <!-- Product List -->
+        <h2 class="text-5xl font-bold text-center text-gray-800 mb-10">All Products</h2>
+        <div id="Products" style="display: none;">
+            <div id="productList"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
+        </div>
+        <div id="loading" class="loading" style="display: block;"></div>
+        <!-- 
+        User Dialog -->
+        <div id="userDialog" class="dialog-overlay">
+            <div class="dialog">
+                <h1 class="text-3xl font-bold text-center m-6">Profile</h1>
+
+                <div id="userProfile"></div>
+
+                <div class="w-full justify-center flex p-3">
+                    <button class="cancel w-full" onclick="closeDialog('userDialog')">Close</button></div>
+            </div>
+        </div>
+
+
+        <!-- Cart Dialog -->
+        <div id="kartDialog" class="dialog-overlay">
+            <div class="dialog">
+                <h3>Shopping Cart</h3>
+                <div class="cart-item">
+                    <p>Product A</p>
+                    <p>$20</p>
+                </div>
+                <div class="cart-item">
+                    <p>Product B</p>
+                    <p>$30</p>
+                </div>
+                <p><strong>Total:</strong> $50</p>
+                <button class="confirm">Proceed to Buy</button>
+                <button class="cancel" onclick="closeDialog('kartDialog')">Close</button>
+            </div>
+        </div>
+
+        <!-- Logout Confirmation Dialog -->
+        <div id="logoutDialog" class="dialog-overlay">
+            <div class="dialog">
+                <p>Are you sure you want to log out?</p>
+                <button class="confirm" onclick="window.location.href = 'index.html'">Yes, Log Out</button>
+                <button class="cancel" onclick="closeDialog('logoutDialog')">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+
+    <script>
+
+        document.getElementById('greeting').innerHTML = "Hello👋" + localStorage.getItem('userName');
+
+
+
+
+        // Your web app's Firebase configuration
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+            authDomain: "ecom-23375.firebaseapp.com",
+            databaseURL: "https://ecom-23375-default-rtdb.firebaseio.com",
+            projectId: "ecom-23375",
+            storageBucket: "ecom-23375.appspot.com",
+            messagingSenderId: "79470020815",
+            appId: "1:79470020815:web:39272f3397b04e54260fba",
+            measurementId: "G-5GK70Z3NZL"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        
+
+        let products = [];
+        let sortBy = 'timestamp'; // Default sort field
+        let sortOrder = 'desc';   // Default sort order
+        let searchTerm = '';      // Default search term
+
+
+
+        // Fetch products from Firebase and include document ID
+        async function fetchProducts() {
+            try {
+                const querySnapshot = await db.collection('products').get();
+                products = querySnapshot.docs.map(doc => {
+                    return { id: doc.id, ...doc.data() }; // Include document ID in the product data
+                });
+                filterAndDisplayProducts();
+            } catch (error) {
+                console.error("Error fetching products: ", error);
+            }
+        }
+
+        function handleSortChange(event) {
+            const [criteria, order] = event.target.value.split('-');
+            sortBy = criteria;
+            sortOrder = order;
+            filterAndDisplayProducts();
+        }
+
+        function filterAndDisplayProducts() {
+            const searchTerm = document.getElementById('searchBar').value.toLowerCase();
+            const filteredProducts = products
+                .filter(product => product.name.toLowerCase().includes(searchTerm))
+                .sort((a, b) => {
+                    if (sortBy === 'price' || sortBy === 'views' || sortBy === 'quantitySold') {
+                        return sortOrder === 'asc' ? a[sortBy] - b[sortBy] : b[sortBy] - a[sortBy];
+                    } else if (sortBy === 'timestamp') {
+                        return sortOrder === 'asc' ? a.timestamp.seconds - b.timestamp.seconds : b.timestamp.seconds - a.timestamp.seconds;
+                    } else if (sortBy === 'name') {
+                        return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+                    }
+                    return 0;
+                });
+            displayProducts(filteredProducts);
+        }
+
+        function displayProducts(productsToDisplay) {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = ''; // Clear previous products
+
+            productsToDisplay.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product bg-white rounded-lg shadow-lg hover:shadow-2xl hover:bg-gray-200 transition-colors duration-300 ease-in-out m-3 overflow-hidden flex flex-col transition-transform transform hover:scale-110';
+                productElement.innerHTML = `
+                ${product.quantity>0?`
+                
+                    <button class='m-6' onclick="viewProduct('${product.id}')">
+                        <div class="mb-4">
+                            <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
+                        </div>
+                        <div class="flex-grow overflow-auto">
+                            <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
+                            <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
+                            <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                            <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
+                        </div>
+                    </button>
+                        `:`
+                        
+                    <button class='p-6 bg-red-100' onclick="viewProduct('${product.id}')">
+                        
+                        <p class="text-lg text-red-500"><span class="font-bold">Out Of Stock</span> <span class="font-normal"></span></p>
+                        <div class="mb-4">
+                            <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
+                        </div>
+                        <div class="flex-grow overflow-auto">
+                            <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
+                            <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
+                            <p class="text-lg text-red-500"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                            <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
+                        </div>
+                    </button>
+                        `}
+            `;
+                productList.appendChild(productElement);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('Products').style.display = 'block';
+        }
+
+        
+
+        fetchProducts();
+    </script>
+
+    <script>
+
+        function viewProduct(productId) {
+            window.location.href = `loggedProductDetails.html?id=${productId}`;
+        }   
+
+    </script>
+
+    <div class="text-center">
+        <a href="addNewProduct.html"><button
+                class="p-8 m-5  rounded-xl text-white font-mono font-bold text-2xl bg-yellow-500 shadow-xl shadow-green-500">Add
+                Become A Seller</button></a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js";
+        import { getDatabase, ref, set, child, get } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-database.js";
+        
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app)
+
+
+        const emailNode = localStorage.getItem('userEmail').replace(/\./g, ',');
+
+
+        const dbRef = ref(database, 'users');
+
+        get(child(dbRef, emailNode)).then((snapshot) => {
+
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                localStorage.setItem('userBalance',data.balance);
+                document.getElementById('userProfile').innerHTML = `
+                <p class="text-lg text-gray-800"><span class="font-bold">Name :</span> <span class="font-normal">${data.name}</span></p>
+                <p class="text-lg text-gray-800"><span class="font-bold">Email :</span> <span class="font-normal">${data.email}</span></p>
+                <p class="text-lg text-center text-gray-800"><span class="font-bold text-2xl">Wallet</span> <span class="font-normal"></span></p>
+                <div class="justify-between flex border-4 px-8">
+                    <p class="text-lg text-gray-800 mt-5"><span class="font-bold">Balance :</span> <span class="font-normal">₹${data.balance}</span></p>
+                    <button class="border-2 rounded-lg bg-green-600 text-white font-bold" onclick="window.location.href='wallet.html'">Add Money</button>
+                </div>
+                
+                <p class="text-xl text-gray-800 text-center"><span class="font-bold">Products Purchased</span> <span class="font-normal"></span></p>
+                <div id='productsPurchased' class="border-4 p-4"></div>
+                <p class="text-lg text-gray-800"><span class="font-bold">Product Selling Limit :</span> <span class="font-normal">${data.sellingLimit}</span></p>
+
+                `;
+
+                const propur = document.getElementById('productsPurchased');
+                propur.innerHTML = '';
+                var i=0;
+
+                for (const pro in data.purchaseHistory) {
+                    i++;
+
+                    const prop = data.purchaseHistory[pro];
+                    const ele = document.createElement('div');
+                    ele.className='';
+                    ele.innerHTML = `
+                    
+                <p class="text-lg text-gray-800"><span class="font-bold"></span> <span class="font-normal">${i}. ${prop.name}=>₹${prop.price}x${prop.quantity}=₹${prop.amount}</span></p>
+                    `;
+                    propur.appendChild(ele)
+                }
+
+
+
+
+            } else {
+                alert("No");
+
+            }
+        }).catch((error) => {
+            console.error('Error retrieving data:', error);
+        });
+
+    </script>
+
+
+</body>
+
+</html>

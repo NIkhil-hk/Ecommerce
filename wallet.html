@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Money to Wallet</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Add custom yellow theme color */
+    
+  </style>
+</head>
+<body class="bg-yellow-50 min-h-screen flex items-center justify-center">
+  <div class="max-w-md w-full bg-white shadow-md rounded-lg p-8">
+    <h2 class="text-2xl font-bold mb-4 text-center text-yellow-600">Add Money to Your Wallet</h2>
+    <form id="walletForm" class="space-y-6">
+      <div>
+        <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+        <input type="number" id="amount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" placeholder="Enter amount" min="1" required>
+      </div>
+      <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+        Send Request
+      </button>
+    </form>
+    <p id="message" class="mt-4 text-center text-gray-600"></p>
+  </div>
+  <script>
+
+    document.getElementById("walletForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent form from submitting traditionally
+      
+        const amount = document.getElementById("amount").value;
+        const message = document.getElementById("message");
+      
+        if (amount && amount > 0) {
+          // Here, you would typically send the amount to your backend server
+          // Simulating a successful operation:
+          message.textContent = `Successfully added ₹${amount} to your wallet.`;
+          message.classList.remove("text-red-500");
+          message.classList.add("text-green-500");
+        } else {
+          message.textContent = "Please enter a valid amount.";
+          message.classList.remove("text-green-500");
+          message.classList.add("text-red-500");
+        }
+      
+        // Clear the input field
+        document.getElementById("amount").value = "";
+      });
+      
+  </script>
+</body>
+</html>

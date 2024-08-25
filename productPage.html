@@ -21,6 +21,26 @@
             align-items: center;
             z-index: 50;
         }
+        .loading {
+            border: 10px solid #d2cece;
+            border-radius: 50%;
+            border-top: 10px solid yellow;
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
     <style>
         .theme-yellow {
@@ -70,7 +90,9 @@
     </script>
     <div class="container mx-auto p-3">
         <!-- Product Details -->
-        <div id="productDetails" class="max-w-4xl mx-auto bg-white p-8 rounded shadow-md mb-8"></div>
+        <div id="productDetails" style="display: none;" class="max-w-4xl mx-auto bg-white p-8 rounded shadow-md mb-8"></div>
+        
+        <div id="loading" class="loading" style="display: block;"></div>
 
         <dialog id="buyNowDialog" class="p-0 rounded-lg shadow-lg w-full max-w-md">
             <div class="p-8 bg-white rounded-lg">
@@ -124,6 +146,9 @@
             productDetails.innerHTML = '';
 
             firebase.firestore().collection('products').doc(productId).get().then((doc) => {
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('productDetails').style.display = 'block';
                 if (doc.exists) {
                     product = doc.data();
                     productDetails.innerHTML = `
@@ -133,7 +158,14 @@
                         <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
                         <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
                         <p class="text-gray-700 mb-4"><span class="font-bold">Description :</span> <span class="font-normal">${product.description}</span></p>
-                        <a href="loginSignUp.html"><button class="mt-4 bg-yellow-500 text-white p-4 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 ease-in-out">Buy Now</button></a>
+                        <div class='flex justify-between'>
+                            ${product.quantity > 0 ? `
+                                <button class="mt-4 bg-yellow-500 text-white p-4 px-10 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 ease-in-out" onclick="window.location.href='loginSignUp.html'">Buy Now</button>
+                            ` : `
+                                <button class="mt-4 border border-blue-500 text-red-600 p-4 px-10 rounded-lg font-semibold text-center" onclick="window.location.href='loginSignUp.html'">Out of Stock</button>
+                            `}
+                            <button class="mt-4 bg-blue-500 text-white p-4 px-10 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-300 ease-in-out" onclick="window.location.href='loginSignUp.html'">Add to Cart</button>
+                        </div>
                     `;
                 } else {
                     console.error('No such product!');
