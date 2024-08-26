@@ -241,18 +241,16 @@
         <!-- Cart Dialog -->
         <div id="kartDialog" class="dialog-overlay">
             <div class="dialog">
-                <h3>Shopping Cart</h3>
-                <div class="cart-item">
-                    <p>Product A</p>
-                    <p>$20</p>
+                <div id="cartContent"></div>
+                <div class="flex justify-center m-6">
+    
+                    <button onclick="EmptyKart()" class="bg-red-500 text-white font-bold">Empty the kart</button>
                 </div>
-                <div class="cart-item">
-                    <p>Product B</p>
-                    <p>$30</p>
+                <div class="flex justify-between">
+    
+                    <button class="confirm">Proceed to Buy</button>
+                    <button class="cancel" onclick="closeDialog('kartDialog')">Close</button>
                 </div>
-                <p><strong>Total:</strong> $50</p>
-                <button class="confirm">Proceed to Buy</button>
-                <button class="cancel" onclick="closeDialog('kartDialog')">Close</button>
             </div>
         </div>
 
@@ -400,7 +398,7 @@
 
     <div class="text-center">
         <a href="addNewProduct.html"><button
-                class="p-8 m-5  rounded-xl text-white font-mono font-bold text-2xl bg-yellow-500 shadow-xl shadow-green-500">Add
+                class="p-8 m-5  rounded-xl text-white font-mono font-bold text-2xl bg-yellow-500 shadow-xl shadow-green-500">
                 Become A Seller</button></a>
     </div>
 
@@ -420,26 +418,31 @@
         get(child(dbRef, emailNode)).then((snapshot) => {
 
             if (snapshot.exists()) {
+                var i=0;
+                var total=0;
                 const data = snapshot.val();
                 localStorage.setItem('userBalance',data.balance);
                 document.getElementById('userProfile').innerHTML = `
                 <p class="text-lg text-gray-800"><span class="font-bold">Name :</span> <span class="font-normal">${data.name}</span></p>
                 <p class="text-lg text-gray-800"><span class="font-bold">Email :</span> <span class="font-normal">${data.email}</span></p>
                 <p class="text-lg text-center text-gray-800"><span class="font-bold text-2xl">Wallet</span> <span class="font-normal"></span></p>
-                <div class="justify-between flex border-4 px-8">
-                    <p class="text-lg text-gray-800 mt-5"><span class="font-bold">Balance :</span> <span class="font-normal">₹${data.balance}</span></p>
-                    <button class="border-2 rounded-lg bg-green-600 text-white font-bold" onclick="window.location.href='wallet.html'">Add Money</button>
+                <div class="border-4 px-5">
+                    <div class="justify-between flex">
+                        <p class="text-lg text-gray-800 mt-5"><span class="font-bold">Balance :</span> <span class="font-normal">₹${data.balance}</span></p>
+                        <button class="border-2 rounded-lg bg-green-600 text-white font-bold" onclick="window.location.href='wallet.html'">Add Money</button>
+                    </div>
+                    <div id="total"></div>
                 </div>
-                
                 <p class="text-xl text-gray-800 text-center"><span class="font-bold">Products Purchased</span> <span class="font-normal"></span></p>
                 <div id='productsPurchased' class="border-4 p-4"></div>
+                
                 <p class="text-lg text-gray-800"><span class="font-bold">Product Selling Limit :</span> <span class="font-normal">${data.sellingLimit}</span></p>
 
                 `;
 
                 const propur = document.getElementById('productsPurchased');
                 propur.innerHTML = '';
-                var i=0;
+                
 
                 for (const pro in data.purchaseHistory) {
                     i++;
@@ -449,10 +452,49 @@
                     ele.className='';
                     ele.innerHTML = `
                     
-                <p class="text-lg text-gray-800"><span class="font-bold"></span> <span class="font-normal">${i}. ${prop.name}=>₹${prop.price}x${prop.quantity}=₹${prop.amount}</span></p>
+                <p class="text-lg text-gray-800"><span class="font-bold"></span> <span class="font-normal"><strong>${i}. ${prop.name}</strong> => ₹${prop.price} x ${prop.quantity} = ₹${prop.amount}</span></p>
                     `;
-                    propur.appendChild(ele)
+                    total+=prop.amount;
+                    propur.appendChild(ele);
                 }
+                document.getElementById('total').innerHTML=`
+                
+                <p class="text-lg text-gray-800"><span class="font-bold">Total Amount Spent : </span> <span class="font-normal">₹ ${total}</span></p>
+                `;
+
+                var j = 0;
+                var tot = 0;
+
+                document.getElementById('cartContent').innerHTML = `
+
+                <p class="text-xl text-gray-800 text-center"><span class="font-bold">Your Cart</span> <span class="font-normal"></span></p>
+                <div id='cartProduct' class="border-4 p-4"></div>
+                
+                <div id="tot"></div>
+                
+                `;
+
+                const caP = document.getElementById('cartProduct');
+                caP.innerHTML = '';
+
+                for (const pro in data.kart) {
+                    j++;
+
+                    const prop = data.kart[pro];
+                    const ele = document.createElement('div');
+                    ele.className = '';
+                    ele.innerHTML = `
+                    
+                <p class="text-lg text-gray-800"><span class="font-bold"></span> <span class="font-normal"><strong>${j}. ${prop.name}</strong> => ₹${prop.price} x ${prop.quantity} = ₹${prop.quantity * prop.price}</span></p>
+                    `;
+                    tot += prop.quantity * prop.price;
+                    caP.appendChild(ele);
+                }
+                document.getElementById('tot').innerHTML = `
+                
+                <p class="text-lg m-2 text-center text-gray-800"><span class="font-bold">Total Amount : </span> <span class="font-normal">₹ ${tot}</span></p>
+                `;
+
 
 
 
@@ -464,6 +506,17 @@
         }).catch((error) => {
             console.error('Error retrieving data:', error);
         });
+
+        function EmptyKart() {
+
+            const dbref = ref(database, 'users/' + emailNode + '/kart')
+            set(dbref, "");
+            closeDialog('kartDialog');
+            window.location.href = 'loggedIn.html';
+
+        }
+
+    window.EmptyKart = EmptyKart
 
     </script>
 
