@@ -114,7 +114,7 @@
                     <a href="logStore.html" class="hover:text-gray-800 font-semibold">Store</a>
                     <a href="logMarket.html" class="hover:text-gray-800 font-semibold">Market Place</a>
                     <a href="contactUs.html" class="hover:text-gray-800 font-semibold">Contact Us</a>
-
+                    
                     <button onclick="openDialog('logoutDialog')"
                         class="hover:text-gray-800 font-semibold">Logout</button>
                 </div>
@@ -157,9 +157,9 @@
         </div>
         <div id="menu" class="md:hidden hidden">
             <a href="loggedIn.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Home</a>
-
+            
             <a href="logStore.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Store</a>
-
+            
             <a href="logMarket.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Market Place</a>
             <a href="contactUs.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Contact Us</a>
 
@@ -444,7 +444,7 @@
             var productDetails = document.getElementById('productDetails');
             productDetails.innerHTML = '';
 
-            firebase.firestore().collection('newProducts').doc(productId).get().then((doc) => {
+            firebase.firestore().collection('usedProducts').doc(productId).get().then((doc) => {
 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('productDetails').style.display = 'block';
@@ -455,6 +455,7 @@
                         <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-96 object-contain mb-4">
                         <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
                         <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                        <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
                         <p class="text-gray-700 mb-4"><span class="font-bold">Description :</span> <span class="font-normal">${product.description}</span></p>
                         <div class='flex justify-between'>
                             ${product.quantity > 0 ? `
@@ -496,7 +497,7 @@
 
                         newQuantity = product.quantity - quantity;
 
-                        const productRef = firebase.firestore().collection('newProducts').doc(productId);
+                        const productRef = firebase.firestore().collection('usedProducts').doc(productId);
 
                         // Update the 'quantity' field with the new value
 
@@ -564,6 +565,32 @@
                 body: JSON.stringify({ email: buyerEmail, subject: subject, body: body })
             });
 
+
+            const subject1 = " " + buyerName + " Have Purchased your product with purchase Id is : " + pid;
+
+            const body1 = `
+                  <h2>Hello, Your  ${product.name} was purchased by ${buyerName} . with email id ${buyerEmail}</h2>
+                  <p>Here are the details of your purchase:</p>
+                  <ul>
+                    <li><strong>Product Name : </strong> ${product.name}</li>
+                    <li><strong>Price : </strong> ₹${product.price}</li>
+                    <li><strong>Amount paid : </strong> ₹${product.price * quantity}</li>
+                    <li><strong>Quantity Purchased : </strong> ${quantity}</li>
+                    <li><strong>Purchase ID : </strong> ${pid}</li>
+                    <li>Description : ${product.description}</p>
+                  </ul>
+                  <p>Kindly Dilever the product on time 😊!</p>
+               
+                `;
+
+            const response1 = await fetch('https://otp-server-indol.vercel.app/api/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: product.sellerEmail, subject: subject1, body: body1 })
+            });
+
             if (response.ok) {
                 alert("Order Placed Successfully");
                 document.getElementById('loading1').style.display = 'none';
@@ -594,13 +621,13 @@
         import { getDatabase, ref, set, child, get, push } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-database.js";
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+
         const emailNode = localStorage.getItem('userEmail').replace(/\./g, ',');
+
+
         const dbRef = ref(database, 'users/' + emailNode + '/purchaseHistory');
 
-        
-        
-        
-        
+
 
         const dbRef1 = ref(database, 'users');
 
@@ -674,13 +701,16 @@
                     const ele = document.createElement('div');
                     ele.className = '';
                     ele.innerHTML = `
-                <div class="justify-center flex w-full"><img src=${prop.image} class="h-32"> </div>    
-                <p class="text-lg text-gray-800"><span class="font-bold"></span> <span class="font-normal"><strong>${j}. ${prop.name}</strong> => ₹${prop.price} x ${prop.quantity} = ₹${prop.quantity * prop.price}</span></p>
-                    `;
+                    
+                    <div class="justify-center flex w-full"><img src=${prop.image} class="h-32"> </div>    
+                    <p class="text-lg text-gray-800"><span class="font-bold"></span> <span class="font-normal"><strong>${j}. ${prop.name}</strong> => ₹${prop.price} x ${prop.quantity} = ₹${prop.quantity * prop.price}</span></p>
+                         `;
                     tot += prop.quantity * prop.price;
                     caP.appendChild(ele);
                 }
-                localStorage.setItem('cartAmount',tot);                document.getElementById('tot').innerHTML = `
+                
+                localStorage.setItem('cartAmount',tot);
+                document.getElementById('tot').innerHTML = `
                 
                 <p class="text-lg m-2 text-center text-gray-800"><span class="font-bold">Total Amount : </span> <span class="font-normal">₹ ${tot}</span></p>
                 `;
@@ -717,35 +747,38 @@
                 .catch((error) => {
                     console.error('Error adding item: ', error);
                 });
-
+                
 
             const pur = ref(database, 'Purchase Log');
             const date = new Date();
-
+          
             const newpur = push(pur);
-            set(newpur, {
-                user: localStorage.getItem('userName'),
-                email: localStorage.getItem('userEmail'),
-                timestamp: date + "",
-                productName: product.name,
-                productPrice: product.price,
-                quantityPurchased: document.getElementById('quantity').value,
-                seller: product.seller,
-                sellerEmail: product.sellerEmail
+            set(newpur,{ 
+                user:localStorage.getItem('userName'),
+                email:localStorage.getItem('userEmail'),
+                timestamp: date+"",
+                productName:product.name,
+                productPrice:product.price,
+                quantityPurchased:document.getElementById('quantity').value,
+                seller:product.seller,
+                sellerEmail:product.sellerEmail
 
-
-
+                
+                
             }).then(() => {
                 alert('successfully!');
             })
-                .catch((error) => {
-                    console.error('Error purchase: ', error);
-                });
+            .catch((error) => {
+                console.error('Error purchase: ', error);
+            });
         }
 
         function ChangeBal(balance) {
             const dbref = ref(database, 'users/' + emailNode + '/balance')
             set(dbref, balance);
+
+
+
 
         }
         function addCart() {
@@ -753,7 +786,7 @@
             const newItemRef = push(db);
 
             // Set the new item data
-            if (product.quantity >= parseInt(document.getElementById('kquantity').value)) {
+            if (product.quantity >=parseInt(document.getElementById('kquantity').value)) {
 
                 set(newItemRef, {
                     name: product.name,
@@ -773,8 +806,7 @@
 
             }
             else {
-                alert("Quantity not Available Select less"+product.quantity);
-
+                alert("Quantity not Available Select less");
             }
         }
 
@@ -787,11 +819,12 @@
 
         }
 
-
         async function buyCartProduct() {
 
             if (parseInt(localStorage.getItem("userBalance")) >= parseInt(localStorage.getItem("cartAmount"))) {
+                const emailNode = localStorage.getItem('userEmail').replace(/\./g, ',');
 
+                const dbRef1 = ref(database, 'users');
 
                 get(child(dbRef1, emailNode + "/kart")).then((snapshot) => {
 
@@ -839,11 +872,12 @@
 
 
 
+
+        window.buyCartProduct = buyCartProduct
         window.SubmitHistory = SubmitHistory;
         window.ChangeBal = ChangeBal
         window.addCart = addCart
         window.EmptyKart = EmptyKart
-        window.buyCartProduct = buyCartProduct
 
 
 

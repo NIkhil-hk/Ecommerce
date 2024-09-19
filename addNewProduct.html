@@ -13,58 +13,38 @@
             background-color: #f6c700;
             color: #1a202c;
         }
-        
+
+        .loading {
+            border: 10px solid #d2cece;
+            border-radius: 50%;
+            border-top: 10px solid yellow;
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <nav class="theme-yellow shadow-md">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="text-xl font-bold">
-                    E-commerce
-                </div>
-                <div class="hidden md:flex space-x-4">
-                    <a href="#" class="hover:text-gray-800">Home</a>
-                    <a href="#" class="hover:text-gray-800">Shop</a>
-                    <a href="#" class="hover:text-gray-800">Contact</a>
-                    <a href="#" class="hover:text-gray-800">About</a>
-                </div>
-                <div class="hidden md:flex">
-                    <a href="loginSignUp.html" class="ml-4 hover:text-gray-800"><button class="hover:bg-red-500 rounded p-2 bg-yellow-500">Login/SignUp</button></a>
-                </div>
-                <div class="md:hidden">
-                    <button id="menu-button" class="focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div id="menu" class="md:hidden hidden">
-            <a href="#" class="block px-4 py-2">Home</a>
-            <a href="#" class="block px-4 py-2">Shop</a>
-            <a href="#" class="block px-4 py-2">Contact</a>
-            <a href="#" class="block px-4 py-2">About</a>
-            <a href="#login" class="block px-4 py-2">Login</a>
-            <a href="#signup" class="block px-4 py-2">Sign Up</a>
-        </div>
-    </nav>
-
-    <script>
-        document.getElementById('menu-button').addEventListener('click', function () {
-            document.getElementById('menu').classList.toggle('hidden');
-        });
-    </script>
 
     <!-- adding new product -->
     <div class="max-w-md mx-auto bg-white p-8 rounded shadow-md mb-8 m-10 text-center">
         <h2 class="text-2xl font-bold mb-4">Add Your Product</h2>
         <form id="addProductForm" class="space-y-4">
-            <input type="text" id="sellerName" placeholder="Seller's Name"
-                class="w-full p-2 border border-gray-300 rounded" required>
+
             <input type="text" id="productName" placeholder="Product Name"
                 class="w-full p-2 border border-gray-300 rounded" required>
             <textarea id="productDescription" placeholder="Product Description"
@@ -88,6 +68,20 @@
     </div>
     </div>
 
+    <div class="text-center text-4xl font-bold">Uploaded Products</div>
+
+    <div id="loading" class="loading" style="display: block;"></div>
+    <div class="text-center text-4xl bold">
+
+
+        <div id="productList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl p-3 "></div>
+
+        <div id="approvedProductList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl p-3 ">
+        </div>
+    </div>
+    </div>
+
+
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
@@ -110,100 +104,234 @@
 
         // Authentication
 
+        const db = firebase.firestore();
+
+
+        var products;
+        var products1;
+
+
+
+        async function fetchProducts(sellerEmail) {
+            try {
+                const querySnapshot = await db.collection('pendingProducts')
+                    .where('sellerEmail', '==', localStorage.getItem('userEmail')) // Filter by sellersEmail
+                    .get();
+
+                products = querySnapshot.docs.map(doc => {
+                    return { id: doc.id, ...doc.data() }; // Include document ID in the product data
+                });
+                displayProducts();
+            } catch (error) {
+                console.error("Error fetching products: ", error);
+            }
+        }
+
+        async function fetchProducts1(sellerEmail) {
+            try {
+                const querySnapshot = await db.collection('usedProducts')
+                    .where('sellerEmail', '==', localStorage.getItem('userEmail')) // Filter by sellersEmail
+                    .get();
+
+                products1 = querySnapshot.docs.map(doc => {
+                    return { id: doc.id, ...doc.data() }; // Include document ID in the product data
+                });
+                displayProducts1();
+            } catch (error) {
+                console.error("Error fetching products: ", error);
+            }
+        }
+
+        fetchProducts();
+        fetchProducts1();
+
+        function displayProducts() {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = ''; // Clear previous products
+
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product bg-white rounded-lg shadow-lg hover:shadow-2xl  m-3 overflow-hidden flex flex-col ';
+                productElement.innerHTML = `
+                
+                    
+                <button class='m-6'>
+                    <div class="mb-4">
+                        <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
+                    </div>
+                    <div class="flex-grow overflow-auto">
+                        <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
+                        <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
+                        <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                        <p class="text-xl text-red-500"><span class="font-bold">Approval Pending</span> <span class="font-normal"></span></p>
+                    </div>
+                </button>`
+
+
+                productList.appendChild(productElement);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function displayProducts1() {
+            const productList = document.getElementById('approvedProductList');
+            productList.innerHTML = ''; // Clear previous products
+
+            products1.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product bg-white rounded-lg shadow-lg hover:shadow-2xl  m-3 overflow-hidden flex flex-col ';
+                productElement.innerHTML = `
+                
+                    
+                <button class='m-6'>
+                    <div class="mb-4">
+                        <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-contain rounded-lg">
+                    </div>
+                    <div class="flex-grow overflow-auto">
+                        <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
+                        <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
+                        <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                        <p class="text-xl text-green-600"><span class="font-bold">Approved By Buy and Sell</span> <span class="font-normal"></span></p>
+                    </div>
+                </button>`
+
+
+                productList.appendChild(productElement);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+        }
+
+
 
         // Add Product
         document.getElementById('addProductForm').addEventListener('submit', (e) => {
             e.preventDefault();
-var productName = document.getElementById('productName').value;
-var productDescription = document.getElementById('productDescription').value;
-var productImage = document.getElementById('productImage').files[0];
-var sellerName = document.getElementById('sellerName').value;
-var Price = document.getElementById('price').value;
-var Quantity = document.getElementById('quantity').value;
+            var productName = document.getElementById('productName').value;
+            var productDescription = document.getElementById('productDescription').value;
+            var productImage = document.getElementById('productImage').files[0];
+            var Price = document.getElementById('price').value;
+            var Quantity = document.getElementById('quantity').value;
 
-// Function to resize and compress the image to exactly 50KB
-function compressImageToExactSize(file, maxSizeKB, callback) {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function(event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            
+        
 
-            const scaleFactor = Math.sqrt(maxSizeKB * 1024 / (img.width * img.height * 0.75));
-            canvas.width = img.width * scaleFactor;
-            canvas.height = img.height * scaleFactor;
+            // Function to resize and compress the image to exactly 50KB
+            function compressImageToExactSize(file, maxSizeKB, callback) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
 
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const scaleFactor = Math.sqrt(maxSizeKB * 1024 / (img.width * img.height * 0.75));
+                        canvas.width = img.width * scaleFactor;
+                        canvas.height = img.height * scaleFactor;
 
-            // Function to try different quality levels to achieve the target size
-            function adjustQuality(currentQuality, callback) {
-                canvas.toBlob(
-                    (blob) => {
-                        if (blob.size / 1024 <= maxSizeKB) {
-                            callback(blob);
-                        } else {
-                            // Decrease quality if size is still larger than maxSizeKB
-                            adjustQuality(currentQuality - 0.05, callback);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        // Function to try different quality levels to achieve the target size
+                        function adjustQuality(currentQuality, callback) {
+                            canvas.toBlob(
+                                (blob) => {
+                                    if (blob.size / 1024 <= maxSizeKB) {
+                                        callback(blob);
+                                    } else {
+                                        // Decrease quality if size is still larger than maxSizeKB
+                                        adjustQuality(currentQuality - 0.05, callback);
+                                    }
+                                },
+                                'image/jpeg',
+                                currentQuality
+                            );
                         }
-                    },
-                    'image/jpeg',
-                    currentQuality
-                );
+
+                        // Start adjusting quality from 0.7
+                        adjustQuality(0.7, callback);
+                    };
+                };
             }
 
-            // Start adjusting quality from 0.7
-            adjustQuality(0.7, callback);
-        };
-    };
-}
 
-// Use the compressImageToExactSize function to compress the image
-compressImageToExactSize(productImage, 50, (compressedImageBlob) => {
-    var storageRef = firebase.storage().ref('products/' + productImage.name);
-    var uploadTask = storageRef.put(compressedImageBlob);
+            if(Price>0 && Quantity>0)
+            {
 
-    document.getElementById('uploadProgress').classList.remove('hidden');
 
-    uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-            // Upload progress
-            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressBar').textContent = Math.round(progress) + '%';
-        },
-        (error) => {
-            console.error('Upload failed:', error);
-        },
-        () => {
-            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                firebase.firestore().collection('products').add({
-                    seller: sellerName,
-                    name: productName,
-                    price: Price,
-                    quantity: Quantity,
-                    description: productDescription,
-                    imageUrl: downloadURL,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                })
-                .then(() => {
-                    console.log('Product added successfully');
-                    document.getElementById('uploadProgress').classList.add('hidden');
-                    window.location.href = 'loggedIn.html';
-                })
-                .catch((error) => {
-                    console.error('Error adding product:', error);
+                compressImageToExactSize(productImage, 50, (compressedImageBlob) => {
+                    var storageRef = firebase.storage().ref('products/' + productImage.name);
+                    var uploadTask = storageRef.put(compressedImageBlob);
+    
+                    document.getElementById('uploadProgress').classList.remove('hidden');
+    
+                    uploadTask.on(
+                        'state_changed',
+                        (snapshot) => {
+                            // Upload progress
+                            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            document.getElementById('progressBar').style.width = progress + '%';
+                            document.getElementById('progressBar').textContent = Math.round(progress) + '%';
+                        },
+                        (error) => {
+                            console.error('Upload failed:', error);
+                        },
+                        () => {
+                            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                                firebase.firestore().collection('pendingProducts').add({
+                                    seller: localStorage.getItem('userName'),
+                                    sellerEmail: localStorage.getItem('userEmail'),
+                                    name: productName,
+                                    price: Price,
+                                    quantity: Quantity,
+                                    description: productDescription,
+                                    imageUrl: downloadURL,
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                })
+                                    .then(() => {
+                                        console.log('Product added successfully');
+                                        document.getElementById('uploadProgress').classList.add('hidden');
+                                        window.location.href = 'loggedIn.html';
+                                    })
+                                    .catch((error) => {
+                                        console.error('Error adding product:', error);
+                                    });
+                            });
+                        }
+                    );
                 });
-            });
-        }
-    );
-});
+                
+            }
+            else{
+                alert("Error Product Can't be Uploaded Enter Valid price and quantity");
+            }
+
+
+            // Use the compressImageToExactSize function to compress the image
+            
 
         });
     </script>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js";
+        import { getDatabase, ref, set, child, get } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-database.js";
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app)
+
+
+        const emailNode = localStorage.getItem('userEmail').replace(/\./g, ',');
+
+
+        const dbRef = ref(database, 'users');
+
+
+    </script>
+
 </body>
 
 </html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Approval</title>
+  
+  <!-- Firebase SDKs (Compat Version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore-compat.js"></script>
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- SweetAlert2 for Modals -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body class="bg-gray-100">
+
+  <!-- Loading Spinner -->
+  <div id="loading" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container mx-auto mt-10">
+    <h1 class="text-3xl text-center font-bold mb-5">Approval Pending for Products</h1>
+    <div id="product-list" class="space-y-4">
+      <!-- Products will be rendered here -->
+    </div>
+    <div id="empty-message" class="text-center text-gray-500 hidden">No pending products found.</div>
+  </div>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+        authDomain: "ecom-23375.firebaseapp.com",
+        databaseURL: "https://ecom-23375-default-rtdb.firebaseio.com",
+        projectId: "ecom-23375",
+        storageBucket: "ecom-23375.appspot.com",
+        messagingSenderId: "79470020815",
+        appId: "1:79470020815:web:39272f3397b04e54260fba",
+        measurementId: "G-5GK70Z3NZL"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Show loading spinner
+    function showLoading(isLoading) {
+      const loading = document.getElementById('loading');
+      if (isLoading) {
+        loading.classList.remove('hidden');
+      } else {
+        loading.classList.add('hidden');
+      }
+    }
+
+    // Show confirmation dialog before approval/decline
+    async function showConfirmation(action, productId) {
+      const result = await Swal.fire({
+        title: `Are you sure you want to ${action} this product?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: action === 'approve' ? '#38a169' : '#e53e3e',
+        cancelButtonColor: '#a0aec0',
+        confirmButtonText: `Yes, ${action}!`
+      });
+      return result.isConfirmed;
+    }
+
+    // Fetch pending products from Firestore
+    async function fetchPendingProducts() {
+      showLoading(true);
+      try {
+        const pendingProductsSnapshot = await db.collection('pendingProducts').get();
+        const productList = document.getElementById('product-list');
+        const emptyMessage = document.getElementById('empty-message');
+        productList.innerHTML = '';  // Clear existing products
+
+        if (pendingProductsSnapshot.empty) {
+          emptyMessage.classList.remove('hidden');
+        } else {
+          emptyMessage.classList.add('hidden');
+          pendingProductsSnapshot.forEach(doc => {
+            const product = doc.data();
+            const productElement = document.createElement('div');
+            productElement.classList.add('bg-white', 'p-5', 'rounded', 'shadow-md', 'flex', 'justify-between', 'items-center');
+  
+            productElement.innerHTML = `
+              <div>
+                <img src="${product.imageUrl}" width=200px>
+                <h2 class="text-xl font-bold">Name : ${product.name}</h2>
+                <h2 class="text-xl font-bold">Seller : ${product.seller}</h2>
+                <h2 class="text-xl font-bold">Price : ₹ ${product.price}</h2>
+                <p>Quantity : ${product.quantity}</p>
+                <p>Email : ${product.sellerEmail}</p>
+                <p>Discription : ${product.description}</p>
+                
+              </div>
+              <div class="space-x-4">
+                <button class="bg-green-500 text-white px-3 py-2 rounded" onclick="handleApprove('${doc.id}')">Approve</button>
+                <button class="bg-red-500 text-white px-3 py-2 rounded" onclick="handleDecline('${doc.id}')">Decline</button>
+              </div>
+            `;
+            productList.appendChild(productElement);
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to fetch products.',
+          icon: 'error',
+          confirmButtonText: 'Okay'
+        });
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Approve product: move to 'products' collection and remove from 'pendingProducts'
+    async function handleApprove(productId) {
+      const confirm = await showConfirmation('approve', productId);
+      if (!confirm) return;
+
+      showLoading(true);
+      try {
+        const productDoc = await db.collection('pendingProducts').doc(productId).get();
+        const productData = productDoc.data();
+        await db.collection('usedProducts').doc(productId).set(productData);  // Add to products collection
+        await db.collection('pendingProducts').doc(productId).delete();  // Remove from pendingProducts
+
+        Swal.fire('Approved!', 'Product has been approved.', 'success');
+        fetchPendingProducts();  // Refresh the list
+      } catch (error) {
+        Swal.fire('Error!', 'Failed to approve the product.', 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Decline product: just remove from 'pendingProducts'
+    async function handleDecline(productId) {
+      const confirm = await showConfirmation('decline', productId);
+      if (!confirm) return;
+
+      showLoading(true);
+      try {
+        await db.collection('pendingProducts').doc(productId).delete();  // Remove from pendingProducts
+        Swal.fire('Declined!', 'Product has been declined.', 'success');
+        fetchPendingProducts();  // Refresh the list
+      } catch (error) {
+        Swal.fire('Error!', 'Failed to decline the product.', 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Fetch products on page load
+    fetchPendingProducts();
+
+  </script>
+
+  <style>
+    /* Custom loading spinner */
+    .loader {
+      border-color: #4299e1;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+</body>
+</html>

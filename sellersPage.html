@@ -1,0 +1,23 @@
+// Get logged-in user's email
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        const sellerEmail = user.email;
+
+        // Add product logic
+        firebase.firestore().collection('products').add({
+            name: productName,
+            description: productDescription,
+            price: Price,
+            quantity: Quantity,
+            imageUrl: downloadURL,
+            sellerEmail: sellerEmail // Add seller's email here
+        })
+        .then(() => {
+            alert('Product added successfully');
+            // Reset the form and hide the progress bar
+        })
+        .catch((error) => {
+            console.error('Error adding product:', error);
+        });
+    }
+});

@@ -123,7 +123,6 @@
 </head>
 
 <body class="bg-gray-100">
-
     <nav class="theme-yellow shadow-md">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
@@ -179,7 +178,7 @@
             <a href="loggedIn.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Home</a>
             <a href="logStore.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Store</a>
             <a href="logMarket.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Market Place</a>
-            <a href="#" class="block px-4 py-2 hover:bg-green-400 font-semibold">Contact</a>
+            <a href="contactUs.html" class="block px-4 py-2 hover:bg-green-400 font-semibold">Contact us</a>
             
 
             <button onclick="openDialog('logoutDialog')"
@@ -208,98 +207,7 @@
 
 
 
-    <div class="container mx-auto py-8">
-        <div class="relative w-full max-w-4xl rounded-2xl mx-auto overflow-hidden">
     
-          <!-- Carousel Wrapper -->
-          <div id="carousel" class="flex w-full">
-            <!-- Images -->
-            <div class="carousel-item active">
-              <img src="images/car1.jpg" alt="Phone 1" class="w-full h-auto">
-            </div>
-            <div class="carousel-item">
-              <img src="images/car2.jpg" alt="Phone 2" class="w-full h-auto">
-            </div>
-            <div class="carousel-item">
-              <img src="images/car3.jpg" alt="Phone 3" class="w-full h-auto">
-            </div>
-            <div class="carousel-item">
-                <img src="images/car4.jpeg" alt="Phone 3" class="w-full h-auto">
-              </div>
-              <div class="carousel-item">
-                <img src="images/car5.jpg" alt="Phone 3" class="w-full h-auto">
-              </div>
-              <div class="carousel-item">
-                <img src="images/car6.jpg" alt="Phone 3" class="w-full h-auto">
-              </div>
-              
-
-          </div>
-    
-          <!-- Previous and Next Buttons -->
-          <button id="prev" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gray-800 text-white rounded-full p-3 focus:outline-none">❮</button>
-          <button id="next" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-gray-800 text-white rounded-full p-3 focus:outline-none">❯</button>
-    
-        </div>
-      </div>
-    
-      <script>
-        const carousel = document.getElementById('carousel');
-        const items = document.querySelectorAll('.carousel-item');
-        let index = 0;
-    
-        // Function to update the active item
-        function updateActiveItem() {
-          items.forEach((item, idx) => {
-            item.classList.remove('active');
-            if (idx === index) {
-              item.classList.add('active');
-            }
-          });
-        }
-    
-        // Automatic Slide every 3 seconds
-        const autoSlide = setInterval(() => {
-          if (index < items.length - 1) {
-            index++;
-          } else {
-            index = 0;
-          }
-          updateActiveItem();
-          carousel.style.transform = `translateX(-${index * 100}%)`;
-        }, 3000);
-    
-        // Manual Slide with Next and Prev buttons
-        document.getElementById('next').addEventListener('click', () => {
-           // Stop auto-slide on manual interaction
-           clearInterval(autoSlide);
-          if (index < items.length - 1) {
-            index++;
-          } else {
-            index = 0;
-          }
-          updateActiveItem();
-          carousel.style.transform = `translateX(-${index * 100}%)`;
-        });
-    
-        document.getElementById('prev').addEventListener('click', () => {
-           // Stop auto-slide on manual interaction
-           clearInterval(autoSlide);
-          if (index > 0) {
-            index--;
-          } else {
-            index = items.length - 1;
-          }
-          updateActiveItem();
-          carousel.style.transform = `translateX(-${index * 100}%)`;
-        });
-    
-      </script>
-
-
-
-
-
 
 
     <div class='text-center'>
@@ -312,7 +220,6 @@
 
     <div class="flex justify-center m-4">
         <select class="border-4 p-4 rounded-2xl" id="sortDropdown" onchange="handleSortChange(event)">
-            <option value="timestamp-asc">Select sort by</option>
             <option value="timestamp-desc">Newest First</option>
             <option value="timestamp-asc">Oldest First</option>
             <option value="price-asc">Price: Low to High</option>
@@ -331,7 +238,7 @@
 
 
         <!-- Product List -->
-        <h2 class="text-5xl font-bold text-center text-gray-800 mb-10">Featured Products</h2>
+        <h2 class="text-5xl font-bold text-center text-gray-800 mb-10">Store</h2>
         <div id="Products" style="display: none;">
             <div id="productList"
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
@@ -384,9 +291,7 @@
 
     <script>
 
-        document.getElementById('greeting').innerHTML = "Hello👋" + localStorage.getItem('userName');
-
-
+    
 
 
         // Your web app's Firebase configuration
@@ -409,7 +314,7 @@
 
         let products = [];
         let sortBy = 'timestamp'; // Default sort field
-        let sortOrder = 'asc';   // Default sort order
+        let sortOrder = 'desc';   // Default sort order
         let searchTerm = '';      // Default search term
 
 
@@ -469,8 +374,7 @@
                             <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
                             <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
                             <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
-                            
-                    <p class="text-xl text-green-600"><span class="font-bold">Buy & Sell Trusted</span> <span class="font-normal"></span></p>
+                            <p class="text-xl text-green-600"><span class="font-bold">Buy & Sell Trusted</span> <span class="font-normal"></span></p>
                         </div>
                     </button>
                         `:`
@@ -485,7 +389,8 @@
                             <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
                             <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
                             <p class="text-lg text-red-500"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
-                            <p class="text-xl text-green-600"><span class="font-bold">Buy & Sell Trusted</span> <span class="font-normal"></span></p>
+                            
+                    <p class="text-xl text-green-600"><span class="font-bold">Buy & Sell Trusted</span> <span class="font-normal"></span></p>
                         </div>
                     </button>
                         `}
@@ -597,7 +502,7 @@
                     
                     <div class="justify-center flex w-full"><img src=${prop.image} class="h-32"> </div>    
                     <p class="text-lg text-gray-800"><span class="font-bold"></span> <span class="font-normal"><strong>${j}. ${prop.name}</strong> => ₹${prop.price} x ${prop.quantity} = ₹${prop.quantity * prop.price}</span></p>
-                          `;
+                         `;
                     tot += prop.quantity * prop.price;
                     caP.appendChild(ele);
                 }
@@ -628,15 +533,12 @@
             window.location.href = 'loggedIn.html';
 
         }
-
         async function buyCartProduct() {
 
             if (parseInt(localStorage.getItem("userBalance")) >= parseInt(localStorage.getItem("cartAmount"))) {
-
                 const emailNode = localStorage.getItem('userEmail').replace(/\./g, ',');
 
-        const dbRef1 = ref(database, 'users');
-
+                const dbRef1 = ref(database, 'users');
 
                 get(child(dbRef1, emailNode + "/kart")).then((snapshot) => {
 
@@ -681,7 +583,7 @@
         }
 
 
-    window.buyCartProduct=buyCartProduct
+        window.buyCartProduct = buyCartProduct
     window.EmptyKart = EmptyKart
 
     </script>

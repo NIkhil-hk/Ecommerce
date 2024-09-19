@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-commerce Analytics</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-database-compat.js"></script>
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- SweetAlert2 for Modals -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto mt-10">
+    <h1 class="text-3xl font-bold mb-16 text-center">Buy And Sell Analytics</h1>
+
+    <!-- Total Revenue and Wallet Amount Cards -->
+    <div class="grid grid-cols-2 gap-8 mb-10">
+      <!-- Total Revenue -->
+      <div class="bg-blue-500 text-white p-8 rounded-lg shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4">Total Revenue</h2>
+        <p class="text-3xl" id="total-revenue">₹0</p>
+      </div>
+
+      <!-- Total Wallet Amount -->
+      <div class="bg-green-500 text-white p-8 rounded-lg shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4">Total Wallet Amount</h2>
+        <p class="text-3xl" id="total-wallet-amount">₹0</p>
+      </div>
+    </div>
+
+    <div class="mb-20 text-center">
+      <button onclick="window.location.href='approveProducts.html'" class="p-32 bg-yellow-500 text-white text-xl py-4 rounded-lg shadow-md">
+        See Pending Approvals
+      </button>
+    </div>
+
+    <!-- Users Section -->
+    <div class="mb-20 text-center">
+      <button id="user-btn" class="p-32 bg-blue-500 text-white text-xl py-4 rounded-lg shadow-md">
+        Users Registered: <span id="user-count">0</span>
+      </button>
+    </div>
+
+    <!-- Transactions Section -->
+    <div class="mb-20 text-center">
+      <button id="transaction-btn" class="p-20 bg-green-500 text-white text-xl py-4 rounded-lg shadow-md">
+        Total Transactions: <span id="transaction-count">0</span>
+      </button>
+    </div>
+
+    <!-- Purchases Section -->
+    <div class="mb-20 text-center">
+      <button id="purchase-btn" class="p-20 bg-purple-500 text-white text-xl py-4 rounded-lg shadow-md">
+        Total Purchases: <span id="purchase-count">0</span>
+      </button>
+    </div>
+
+    <!-- Sales Graph -->
+    <div class="mb-20">
+      <h2 class="text-2xl font-semibold text-center mb-5">Analytics of Purchases</h2>
+      <canvas id="purchase-graph"></canvas>
+      <h2 class="text-2xl font-semibold text-center mb-5">Analytics of Wallet Transactions</h2>
+      <canvas id="wallet-graph" class="mb-10"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+      authDomain: "ecom-23375.firebaseapp.com",
+      databaseURL: "https://ecom-23375-default-rtdb.firebaseio.com",
+      projectId: "ecom-23375",
+      storageBucket: "ecom-23375.appspot.com",
+      messagingSenderId: "79470020815",
+      appId: "1:79470020815:web:39272f3397b04e54260fba",
+      measurementId: "G-5GK70Z3NZL"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Variables to store totals
+    let totalRevenue = 0;
+    let totalWalletAmount = 0;
+
+    // Fetch registered users
+    async function fetchUsers() {
+      const usersRef = db.ref('users');
+      usersRef.on('value', (snapshot) => {
+        const users = snapshot.val();
+        if (users) {
+          const userCount = Object.keys(users).length;
+          document.getElementById('user-count').textContent = userCount;
+
+          // Show users in a dialog
+          document.getElementById('user-btn').addEventListener('click', () => {
+            let userList = '';
+            Object.keys(users).forEach(userId => {
+              const user = users[userId];
+              userList += `<div class="border p-2">${user.name} (${user.email})</div><hr>`;
+            });
+
+            Swal.fire({
+              title: 'Registered Users',
+              html: userList,
+              width: '500px',
+              confirmButtonText: 'Close'
+            });
+          });
+        }
+      });
+    }
+
+
+    function fillMissingDates(dailyData) {
+      const allDates = [];
+      const startDate = new Date(Object.keys(dailyData)[0]);
+      const endDate = new Date(Object.keys(dailyData).slice(-1)[0]);
+
+      for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateStr = new Date(d).toLocaleDateString();
+        allDates.push(dateStr);
+        if (!dailyData[dateStr]) {
+          dailyData[dateStr] = 0;
+        }
+      }
+
+      return allDates;
+    }
+
+    // Fetch transactions
+    async function fetchTransactions() {
+      const transactionRef = db.ref('Wallet Transaction');
+      transactionRef.on('value', (snapshot) => {
+        const transactions = snapshot.val();
+        if (transactions) {
+          const transactionCount = Object.keys(transactions).length;
+          document.getElementById('transaction-count').textContent = transactionCount;
+
+
+          document.getElementById('transaction-btn').addEventListener('click', () => {
+            let transactionList = '';
+            Object.keys(transactions).forEach(transId => {
+              const transaction = transactions[transId];
+              transactionList += `<div class="border p-2">${transaction.email} - ₹ ${transaction.amount}</div><hr>`;
+            });
+
+            Swal.fire({
+              title: 'Transactions',
+              html: transactionList,
+              width: '500px',
+              confirmButtonText: 'Close'
+            });
+          });
+
+          // Calculate total wallet amount
+          totalWalletAmount = Object.values(transactions).reduce((sum, transaction) => sum + transaction.amount, 0);
+          document.getElementById('total-wallet-amount').textContent = `₹${totalWalletAmount}`;
+
+          // Prepare data for wallet sales graph
+          const dailySales = {};
+          Object.values(transactions).forEach(transaction => {
+            const date = new Date(transaction.timestamp).toLocaleDateString();
+            dailySales[date] = (dailySales[date] || 0) + transaction.amount;
+          });
+
+          
+
+          drawGraph('wallet-graph', dailySales, 'Wallet Sales ($)');
+        }
+      });
+    }
+
+    // Fetch purchases
+    async function fetchPurchases() {
+      const purchasesRef = db.ref('Purchase Log');
+      purchasesRef.on('value', (snapshot) => {
+        const purchases = snapshot.val();
+
+       
+
+
+        if (purchases) {
+          const purchaseCount = Object.keys(purchases).length;
+          document.getElementById('purchase-count').textContent = purchaseCount;
+
+          
+          document.getElementById('purchase-btn').addEventListener('click', () => {
+            let purchaseList = '<div>';
+            Object.keys(purchases).forEach(purchaseId => {
+              const purchase = purchases[purchaseId];
+              purchaseList += `<div class="p-2 border">${purchase.productName} - Quantity: ${purchase.quantityPurchased} - Customer -  ${purchase.user}</div>`;
+            });
+            purchaseList += '</div>';
+
+            Swal.fire({
+              title: 'Purchases',
+              html: purchaseList,
+              width: '500px',
+              confirmButtonText: 'Close'
+            });
+          })
+
+
+
+          // Calculate total revenue
+          totalRevenue = Object.values(purchases).reduce((sum, purchase) => {
+            return sum + (purchase.productPrice * purchase.quantityPurchased);
+          }, 0);
+
+          document.getElementById('total-revenue').textContent = `₹${totalRevenue}`;
+
+          // Prepare data for purchase graph
+          const dailyPurchases = {};
+          Object.values(purchases).forEach(purchase => {
+            const date = new Date(purchase.timestamp).toLocaleDateString();
+            dailyPurchases[date] = (dailyPurchases[date] || 0) + purchase.quantityPurchased * purchase.productPrice;
+          });
+
+          drawGraph('purchase-graph', dailyPurchases, 'Purchases (Amount)');
+        }
+      });
+    }
+
+    // Draw graph for daily data
+    function drawGraph(canvasId, dailyData, label) {
+      const allDates = fillMissingDates(dailyData);
+      const data = allDates.map(date => dailyData[date]);
+
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: allDates,
+          datasets: [{
+            label: label,
+            data: data,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: label
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+            }
+          }
+        }
+      });
+    }
+
+
+    // Initialize analytics on page load
+    fetchUsers();
+    fetchTransactions();
+    fetchPurchases();
+  </script>
+</body>
+</html>

@@ -65,17 +65,6 @@
             color: #aaa; /* Icon color */
             cursor: pointer; /* Change cursor to pointer */
         }
-        .carousel-item {
-            min-width: 100%;
-            transition: transform 0.5s ease-in-out;
-            opacity: 0;
-            transform: scale(0.95);
-          }
-      
-          .carousel-item.active {
-            opacity: 1;
-            transform: scale(1);
-          }
     </style>
 
 </head>
@@ -92,7 +81,7 @@
                 <div class="hidden md:flex space-x-6">
                     <a href="index.html" class="hover:text-gray-800 font-semibold">Home</a>
                     <a href="store.html" class="hover:text-gray-800 font-semibold">Store</a>
-                    <a href="market.html" class="hover:text-gray-800 font-semibold">MarketPlace</a>
+                    <a href="market.html" class="hover:text-gray-800 font-semibold">Market Place</a>
                     <a href="contactUs.html" class="hover:text-gray-800 font-semibold">Contact Us</a>
                 </div>
                 <div class="hidden md:flex">
@@ -133,103 +122,12 @@
 
 
 
-    <h1 class="text-center text-red-400 text-5xl font-mono mt-8 mb-5">Welcome To Buy And Sell</h1>
-    <!-- <a href="source/products.html">See all the Products</a><br>
+     <!-- <a href="source/products.html">See all the Products</a><br>
     <a href="firebaseData.html">Firebase</a><br>
     <a href="firestore.html">Firestore</a><br>
 
     <a href="ImageUpload.html">Go to Images</a><br> -->
-
-    <div class="container mx-auto py-8">
-        <div class="relative w-full max-w-3xl rounded-2xl mx-auto overflow-hidden">
-    
-          <!-- Carousel Wrapper -->
-        
-            <div id="carousel" class="flex w-full">
-              <!-- Images -->
-              <div class="carousel-item active">
-                <img src="images/car1.jpg" alt="Phone 1" class="w-full h-auto">
-              </div>
-              <div class="carousel-item">
-                <img src="images/car2.jpg" alt="Phone 2" class="w-full h-auto">
-              </div>
-              <div class="carousel-item">
-                <img src="images/car3.jpg" alt="Phone 3" class="w-full h-auto">
-              </div>
-              <div class="carousel-item">
-                  <img src="images/car4.jpeg" alt="Phone 3" class="w-full h-auto">
-                </div>
-                <div class="carousel-item">
-                  <img src="images/car5.jpg" alt="Phone 3" class="w-full h-auto">
-                </div>
-                <div class="carousel-item">
-                  <img src="images/car6.jpg" alt="Phone 3" class="w-full h-auto">
-                </div>
-                
-  
-            </div>
-      
-            <!-- Previous and Next Buttons -->
-            <button id="prev" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gray-800 text-white rounded-full p-3 focus:outline-none">❮</button>
-            <button id="next" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-gray-800 text-white rounded-full p-3 focus:outline-none">❯</button>
-      
-      
-        </div>
-      </div>
-    
-      <script>
-        const carousel = document.getElementById('carousel');
-        const items = document.querySelectorAll('.carousel-item');
-        let index = 0;
-    
-        // Function to update the active item
-        function updateActiveItem() {
-          items.forEach((item, idx) => {
-            item.classList.remove('active');
-            if (idx === index) {
-              item.classList.add('active');
-            }
-          });
-        }
-    
-        // Automatic Slide every 3 seconds
-        const autoSlide = setInterval(() => {
-          if (index < items.length - 1) {
-            index++;
-          } else {
-            index = 0;
-          }
-          updateActiveItem();
-          carousel.style.transform = `translateX(-${index * 100}%)`;
-        }, 3000);
-    
-        // Manual Slide with Next and Prev buttons
-        document.getElementById('next').addEventListener('click', () => {
-          clearInterval(autoSlide);
-           // Stop auto-slide on manual interaction
-          if (index < items.length - 1) {
-            index++;
-          } else {
-            index = 0;
-          }
-          updateActiveItem();
-          carousel.style.transform = `translateX(-${index * 100}%)`;
-        });
-    
-        document.getElementById('prev').addEventListener('click', () => {
-           // Stop auto-slide on manual interaction
-           clearInterval(autoSlide);
-          if (index > 0) {
-            index--;
-          } else {
-            index = items.length - 1;
-          }
-          updateActiveItem();
-          carousel.style.transform = `translateX(-${index * 100}%)`;
-        });
-    
-      </script>
-
+    <div class="m-8"></div>
 
     <div class='text-center'>
 
@@ -248,7 +146,6 @@
             id="sortDropdown"
             onchange="handleSortChange(event)"
         >
-            <option value="timestamp-asc">Select sort by</option>
             <option value="timestamp-desc">Newest First</option>
             <option value="timestamp-asc">Oldest First</option>
             <option value="price-asc">Price: Low to High</option>
@@ -268,9 +165,8 @@
 
 
         <!-- Product List -->
-        <h2 class="text-5xl font-bold text-center text-gray-800 mb-10">Featured Products</h2>
+        <h2 class="text-5xl font-bold text-center text-gray-800 mb-10">Store</h2>
         <div id="Products" style="display: none;">
-          <div class="text-center text-2xl p-4">Brand Store</div>
             <div id="productList"
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 rounded-xl border p-3 bg-gray-300"></div>
         </div>
@@ -307,7 +203,7 @@
 
     let products = [];
     let sortBy = 'timestamp'; // Default sort field
-    let sortOrder = 'asc';   // Default sort order
+    let sortOrder = 'desc';   // Default sort order
     let searchTerm = '';      // Default search term
 
     // Fetch products from Firebase and include document ID
@@ -365,6 +261,7 @@
                     <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
                     <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
                     <p class="text-lg text-gray-800"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
+                    
                     <p class="text-xl text-green-600"><span class="font-bold">Buy & Sell Trusted</span> <span class="font-normal"></span></p>
                 </div>
             </button>
@@ -380,7 +277,7 @@
                     <h3 class="text-2xl font-bold mb-2">${product.name}</h3>
                     <p class="text-lg text-gray-800"><span class="font-bold">Price :</span> <span class="font-normal">₹${product.price}</span></p>
                     <p class="text-lg text-red-500"><span class="font-bold">Quantity Left :</span> <span class="font-normal">${product.quantity}</span></p>
-                    <p class="text-lg text-gray-800"><span class="font-bold">Seller's Name :</span> <span class="font-normal">${product.seller}</span></p>
+                    <p class="text-xl text-green-600"><span class="font-bold">Buy & Sell Trusted</span> <span class="font-normal"></span></p>
                 </div>
             </button>
                 `}
