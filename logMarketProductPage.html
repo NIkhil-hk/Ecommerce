@@ -396,6 +396,36 @@
         <div id="loading" class="loading" style="display: block;"></div>
     </div>
 
+
+    <!-- Overall Rating Section with Circular Progress Bar -->
+<div id="overallRatingContainer" class="max-w-4xl mx-auto bg-white p-4 rounded shadow-md mt-8 flex items-center space-x-4">
+    <h2 class="text-xl font-bold">Overall Rating:</h2>
+    <div class="relative w-16 h-16">
+        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="10" />
+            <circle id="ratingProgress" cx="50" cy="50" r="45" fill="none" stroke="#10b981" stroke-width="10" stroke-dasharray="283" stroke-dashoffset="283" stroke-linecap="round" />
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center text-lg font-bold" id="overallRating">0.0</div>
+    </div>
+</div>
+<!-- Reviews Section -->
+
+<div id="reviewsSection" class="max-w-4xl mx-auto bg-white p-8 rounded shadow-md mt-8">
+    <h2 class="text-2xl font-bold mb-4">Reviews</h2>
+
+    <!-- Display Existing Reviews -->
+    <div id="reviewsList" class="space-y-4"></div>
+
+    <!-- Write a Review -->
+    <h3 class="text-xl font-bold mt-6">Write a Review</h3>
+    <textarea id="reviewText" class="w-full p-2 border rounded mt-2" placeholder="Write your review here..."></textarea>
+    <button id="submitReviewButton" onclick="submitReview()" class="mt-4 bg-green-500 text-white p-2 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-300 ease-in-out">
+        Submit Review
+    </button>
+    
+
+</div>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
@@ -436,6 +466,199 @@
         var success = 0;
         var user;
         var balance;
+
+
+
+
+
+        function updateProgressBar(rating) {
+            const progress = document.getElementById("ratingProgress");
+            const overallText = document.getElementById("overallRating");
+    
+            const percentage = (rating / 5) * 283; // Full circle is 283
+            progress.style.strokeDashoffset = 283 - percentage;
+    
+            // Get color based on rating
+            const { bgColor } = getSentimentColors((rating / 5) * 2 - 1); // Convert 0-5 scale to -1 to 1
+            progress.style.stroke = bgColor;
+    
+            overallText.innerText = rating;
+        }
+
+        function calculateAndUpdateOverallRating(reviews) {
+            if (reviews.length === 0) {
+                updateProgressBar(0);
+                return;
+            }
+    
+            // Compute the average rating
+            const totalRating = reviews.reduce((sum, review) => sum + parseFloat(review.rating), 0);
+            const avgRating = (totalRating / reviews.length).toFixed(1); // Round to 1 decimal place
+    
+            // Update UI
+            document.getElementById("overallRating").innerText = avgRating;
+            updateProgressBar(avgRating);
+            // Update the overall rating in Firestore
+            firebase.firestore().collection('usedProducts').doc(productId).update({
+                overall_rating: avgRating
+            })
+            .catch(error => console.error("Error updating overall rating:", error));
+        }
+
+
+        function showLoadingAnimation(show) {
+            const button = document.getElementById("submitReviewButton");
+            const spinner = document.getElementById("loadingSpinner");
+    
+            if (show) {
+                button.disabled = true;
+                button.classList.add("opacity-50", "cursor-not-allowed");
+                
+            } else {
+                button.disabled = false;
+                button.classList.remove("opacity-50", "cursor-not-allowed");
+                
+            }
+        }
+
+ 
+    
+            // Function to Load and Display Reviews
+            function loadReviews() {
+                const reviewsList = document.getElementById('reviewsList');
+                reviewsList.innerHTML = "<p class='text-gray-600'>Loading reviews...</p>";
+        
+                firebase.firestore().collection('usedProducts').doc(productId).get()
+                    .then((doc) => {
+                        if (doc.exists) {
+                            const productData = doc.data();
+                            const reviews = productData.reviews || [];
+                            
+                            
+                            calculateAndUpdateOverallRating(reviews);
+                            if (reviews.length === 0) {
+                                reviewsList.innerHTML = "<p class='text-gray-600'>No reviews yet. Be the first to review!</p>";
+                            } else {
+                                reviewsList.innerHTML = "";
+                                reviews.forEach(review => displayReview(review));
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error loading reviews:", error);
+                    });
+            }
+        
+            // Function to Display a Review with Color Based on Sentiment Score
+            function displayReview(review) {
+                const { bgColor, textColor } = getSentimentColors(review.sentiment_score);
+                const rating = mapSentimentToRating(review.sentiment_score);
+        
+                // Create Review Container
+                const reviewContainer = document.createElement("div");
+                reviewContainer.className = "p-4 border rounded";
+                reviewContainer.style.backgroundColor = bgColor;
+                reviewContainer.style.color = textColor; // Adjust text color
+        
+                // Append Review Content
+                reviewContainer.innerHTML = `
+                    <p class="text-2xl font-semibold">${review.text}</p>
+                    <p class="text-xl font-semibold">Rating : ⭐ ${rating} / 5</p>
+                    <p class="text-sm">Sentiment : ${review.sentiment}  (${review.sentiment_score.toFixed(2)})</p>
+                    <p class="text-sm">${new Date(review.timestamp).toLocaleString()}</p>
+                    <p class="text-sm"> ${review.name} ${review.email}</p>
+                `;
+                document.getElementById("reviewsList").appendChild(reviewContainer);
+            }
+        
+            // Function to Get Sentiment-Based Colors for Background & Text
+            function getSentimentColors(score) {
+                let bgColor, textColor;
+                if (score > 0.7) { 
+                    bgColor = `rgba(34, 197, 94, ${score})`; // Green (Strong Positive)
+                    textColor = "#fff"; // White text
+                } else if (score > 0.3) { 
+                    bgColor = `rgba(134, 239, 172, ${score})`; // Light Green (Moderate Positive)
+                    textColor = "#000"; // Black text
+                } else if (score > -0.3) { 
+                    bgColor = `rgba(249, 250, 199, ${Math.abs(score)})`; // Yellow (Neutral)
+                    textColor = "#000"; // Black text
+                } else if (score > -0.7) { 
+                    bgColor = `rgba(252, 165, 165, ${Math.abs(score)})`; // Light Red (Moderate Negative)
+                    textColor = "#000"; // Black text
+                } else { 
+                    bgColor = `rgba(239, 68, 68, ${Math.abs(score)})`; // Red (Strong Negative)
+                    textColor = "#fff"; // White text
+                }
+                return { bgColor, textColor };
+            }
+        
+            // Function to Map Sentiment Score (-1 to 1) to a Rating (0 to 5)
+            function mapSentimentToRating(score) {
+                return ((score + 1) * 2.5).toFixed(1); // Scale sentiment to 0-5
+            }
+        
+            // Function to Submit a Review with Sentiment Score & Rating
+            function submitReview() {
+                const reviewText = document.getElementById('reviewText').value.trim();
+                if (!reviewText) {
+                    alert("Please enter a review before submitting.");
+                    return;
+                }
+
+                showLoadingAnimation(true);
+        
+                const userEmail = localStorage.getItem('userEmail');
+                const userName = localStorage.getItem('userName');
+                const timestamp = new Date().toISOString(); 
+        
+                // Call Sentiment Analysis API
+                fetch("https://python-sentimental-analysis.onrender.com/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: reviewText })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const sentimentScore = data.sentiment_score;
+                    const rating = mapSentimentToRating(sentimentScore);
+        
+                    // Review Object with Sentiment Score & Rating
+                    const newReview = {
+                        email: userEmail,
+                        name:userName,
+                        text: reviewText,
+                        timestamp: timestamp,
+                        sentiment_score: sentimentScore,
+                        sentiment:data.sentiment,
+                        rating: rating
+                    };
+        
+                    // Push Review to Firestore
+                    const productRef = firebase.firestore().collection('usedProducts').doc(productId);
+                    productRef.update({
+                        reviews: firebase.firestore.FieldValue.arrayUnion(newReview)
+                    })
+                    .then(() => {
+                        
+                        document.getElementById('reviewText').value = "";  // Clear input
+                        showLoadingAnimation(false);
+                        loadReviews();  // Reload reviews
+
+                    })
+                    .catch((error) => {
+                        console.error("Error submitting review:", error);
+                        showLoadingAnimation(false);
+                    });
+                })
+                .catch(error => console.error("Error fetching sentiment:", error));
+            }
+        
+            // Load Reviews on Page Load
+            loadReviews();
+
+    
+
 
 
 
@@ -496,6 +719,8 @@
                         document.getElementById('canButton').style.display = 'none';
 
                         newQuantity = product.quantity - quantity;
+                        sold = product.quantitySold || 0
+                        sold+=quantity
 
                         const productRef = firebase.firestore().collection('usedProducts').doc(productId);
 
@@ -503,7 +728,8 @@
 
                         try {
                             await productRef.update({
-                                quantity: newQuantity
+                                quantity: newQuantity,
+                                quantitySold:sold
                             });
                         }
                         catch (error) {

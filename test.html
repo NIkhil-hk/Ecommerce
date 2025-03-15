@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gada Elec.</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        /* Styling for Range Slider */
+        .range-slider {
+            width: 100%;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .range-slider input {
+            width: 100%;
+            position: absolute;
+            pointer-events: none;
+            background: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider input::-webkit-slider-thumb {
+            pointer-events: auto;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #1d4ed8;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 flex justify-between py-4">
+            <div class="text-2xl font-bold text-gray-800">Gada <span class="text-blue-500">Elec.</span></div>
+            <input type="text" id="searchBar" oninput="filterAndDisplayProducts()" class="border px-3 py-2 rounded-md w-1/3"
+                placeholder="Search for products...">
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6 flex">
+        <!-- Sidebar (Filters) -->
+        <aside class="w-1/4 bg-white p-4 shadow-md rounded-lg">
+            <h2 class="text-xl font-bold mb-4">Filters</h2>
+            <button onclick="clearFilters()" class="bg-red-500 text-white px-3 py-1 rounded-md mb-4">Clear Filters</button>
+
+            <!-- Price Range -->
+            <div>
+                <h3 class="font-semibold">Price Range</h3>
+                <div class="range-slider">
+                    <input type="range" id="minPrice" min="1299" max="110899" step="1000" value="1299"
+                        oninput="updatePriceRange()">
+                    <input type="range" id="maxPrice" min="1299" max="110899" step="1000" value="110899"
+                        oninput="updatePriceRange()">
+                </div>
+                <p>₹<span id="priceMin">1299</span> - ₹<span id="priceMax">110899</span></p>
+            </div>
+
+            <!-- Categories -->
+            <div>
+                <h3 class="font-semibold mt-4">Category</h3>
+                <div><input type="checkbox" class="category" value="laptop"> Laptop</div>
+                <div><input type="checkbox" class="category" value="tv"> TV</div>
+                <div><input type="checkbox" class="category" value="earphone"> Earphone</div>
+                <div><input type="checkbox" class="category" value="smartwatch"> Smartwatch</div>
+                <div><input type="checkbox" class="category" value="mobile"> Mobile</div>
+            </div>
+
+            <!-- Company Filter -->
+            <div>
+                <h3 class="font-semibold mt-4">Company</h3>
+                <select id="companyFilter" class="border px-2 py-1 rounded-md w-full">
+                    <option value="all">All</option>
+                    <option value="redmi">Redmi</option>
+                    <option value="apple">Apple</option>
+                    <option value="samsung">Samsung</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Products Section -->
+        <section class="w-3/4 ml-6">
+            <h2 class="text-2xl font-bold mb-4">Products</h2>
+            <div id="productList" class="grid grid-cols-3 gap-4"></div>
+        </section>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXeFpHUeA3t8-h_zjQ6780wli8oyZ0hZE",
+            authDomain: "ecom-23375.firebaseapp.com",
+            projectId: "ecom-23375",
+            storageBucket: "ecom-23375.appspot.com",
+            messagingSenderId: "79470020815",
+            appId: "1:79470020815:web:39272f3397b04e54260fba"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let products = [];
+
+        async function fetchProducts() {
+            const querySnapshot = await db.collection("newProducts").get();
+            products = querySnapshot.docs.map(doc => doc.data());
+            filterAndDisplayProducts();
+        }
+
+        function filterAndDisplayProducts() {
+            let filteredProducts = [...products];
+
+            // Search Filter
+            const searchTerm = document.getElementById("searchBar").value.toLowerCase();
+            filteredProducts = filteredProducts.filter(product => product.name.toLowerCase().includes(searchTerm));
+
+            // Price Range Filter
+            const minPrice = parseInt(document.getElementById("minPrice").value);
+            const maxPrice = parseInt(document.getElementById("maxPrice").value);
+            filteredProducts = filteredProducts.filter(product => product.price >= minPrice && product.price <= maxPrice);
+
+            displayProducts(filteredProducts);
+        }
+
+        function displayProducts(productsToDisplay) {
+            const productList = document.getElementById("productList");
+            productList.innerHTML = "";
+
+            productsToDisplay.forEach(product => {
+                const productDiv = document.createElement("div");
+                productDiv.className = "p-4 bg-white shadow-md rounded-lg";
+                productDiv.innerHTML = `
+                    <img src="${product.imageUrl}" class="w-full h-40 object-cover rounded-md">
+                    <h3 class="text-lg font-bold mt-2">${product.name}</h3>
+                    <p class="text-gray-600">₹${product.price}</p>
+                    <button class="mt-2 bg-blue-500 text-white px-3 py-1 rounded-md">Add to Cart</button>
+                `;
+                productList.appendChild(productDiv);
+            });
+        }
+
+        function updatePriceRange() {
+            document.getElementById("priceMin").innerText = document.getElementById("minPrice").value;
+            document.getElementById("priceMax").innerText = document.getElementById("maxPrice").value;
+            filterAndDisplayProducts();
+        }
+
+        function clearFilters() {
+            document.getElementById("searchBar").value = "";
+            fetchProducts();
+        }
+
+        fetchProducts();
+    </script>
+</body>
+</html>
